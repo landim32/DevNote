@@ -1,6 +1,7 @@
 <?xml version = "1.0" encoding = "UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:VoiceNotesAI.Converters"
              x:Class="VoiceNotesAI.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -8,6 +9,21 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters -->
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:RecordButtonTextConverter x:Key="RecordButtonTextConverter" />
+            <converters:RecordButtonColorConverter x:Key="RecordButtonColorConverter" />
+
+            <!-- Chip Button Style -->
+            <Style x:Key="ChipButton" TargetType="Button">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="HeightRequest" Value="34" />
+                <Setter Property="CornerRadius" Value="17" />
+                <Setter Property="Padding" Value="14,0" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#EDE7F6, Dark=#2D2040}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light=#6750A4, Dark=#D0BCFF}" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

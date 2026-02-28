@@ -3,6 +3,7 @@ using Plugin.Maui.Audio;
 using VoiceNotesAI.Data;
 using VoiceNotesAI.Helpers;
 using VoiceNotesAI.Services;
+using VoiceNotesAI.Pages;
 using VoiceNotesAI.ViewModels;
 
 namespace VoiceNotesAI;
@@ -63,6 +64,12 @@ public static class MauiProgram
         builder.Services.AddTransient<RecordingViewModel>();
         builder.Services.AddTransient<NoteResultViewModel>();
         builder.Services.AddTransient<NoteDetailViewModel>();
+
+        // Pages
+        builder.Services.AddTransient<NoteListPage>();
+        builder.Services.AddTransient<RecordingPage>();
+        builder.Services.AddTransient<NoteResultPage>();
+        builder.Services.AddTransient<NoteDetailPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

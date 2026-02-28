@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:VoiceNotesAI.Pages"
        x:Class="VoiceNotesAI.AppShell"
-       Title="VoiceNotes AI">
+       Title="VoiceNotes AI"
+       Shell.BackgroundColor="{AppThemeBinding Light=#6750A4, Dark=#1C1B1F}"
+       Shell.ForegroundColor="{AppThemeBinding Light=White, Dark=#D0BCFF}"
+       Shell.TitleColor="{AppThemeBinding Light=White, Dark=#D0BCFF}">
+
+    <ShellContent
+        Title="Notas"
+        ContentTemplate="{DataTemplate pages:NoteListPage}"
+        Route="NoteListPage" />
+
 </Shell>
