@@ -1,3 +1,5 @@
+using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
 using VoiceNotesAI.Data;
@@ -21,13 +23,17 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+        // Configuration from embedded appsettings.json
+        var assembly = Assembly.GetExecutingAssembly();
+        using var stream = assembly.GetManifestResourceStream("VoiceNotesAI.appsettings.json");
+
+        var config = new ConfigurationBuilder()
+            .AddJsonStream(stream!)
+            .Build();
+
         // Settings
-        var openAISettings = new OpenAISettings
-        {
-            ApiKey = "YOUR_API_KEY_HERE",
-            Model = "gpt-4o",
-            WhisperModel = "whisper-1"
-        };
+        var openAISettings = new OpenAISettings();
+        config.GetSection("OpenAI").Bind(openAISettings);
         builder.Services.AddSingleton(openAISettings);
 
         // Database
