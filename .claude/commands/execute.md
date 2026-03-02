@@ -18,7 +18,7 @@ dotnet build VoiceNotesAI/VoiceNotesAI.csproj -f net8.0-android -t:Install -p:An
 
 4. Then launch the app on the emulator:
 ```bash
-adb shell am start -n com.voicenotesai.app/crc648da53556643be544.MainActivity
+adb shell am start -n br.com.emagine.voicenotesai/crc648da53556643be544.MainActivity
 ```
 
 Report whether the deployment and launch succeeded or failed, and summarize any errors.

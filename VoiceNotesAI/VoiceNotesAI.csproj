@@ -10,7 +10,7 @@
     <Nullable>enable</Nullable>
 
     <ApplicationTitle>VoiceNotes AI</ApplicationTitle>
-    <ApplicationId>com.voicenotesai.app</ApplicationId>
+    <ApplicationId>br.com.emagine.voicenotesai</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
 
