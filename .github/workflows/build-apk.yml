@@ -58,6 +58,9 @@ jobs:
         echo "SemVer: ${{ steps.gitversion.outputs.semVer }}"
         echo "NuGetVersionV2: ${{ steps.gitversion.outputs.nuGetVersionV2 }}"
 
+    - name: Create appsettings.json placeholder
+      run: cp VoiceNotesAI/appsettings.example.json VoiceNotesAI/appsettings.json
+
     - name: Restore dependencies
       run: dotnet restore VoiceNotesAI/VoiceNotesAI.csproj
 
