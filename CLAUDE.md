@@ -27,19 +27,29 @@ dotnet workload install maui-android
 
 ## Architecture
 
-**MVVM pattern** with CommunityToolkit.Mvvm source generators, dependency injection via `MauiProgram.cs`, and interface-based services.
+**MVVM pattern** with CommunityToolkit.Mvvm source generators, dependency injection via `MauiProgram.cs`, and interface-based services. The solution is organized into 4 projects following a layered architecture.
 
 ### Core Flow
 Recording (AudioService) → Transcription (SpeechToTextService → Whisper API) → Interpretation (AIService → GPT-4) → Storage (NoteRepository → SQLite)
 
+### Project Structure
+
+```
+VoiceNotesAI.Domain        (net8.0)  — Models + Helpers (no dependencies)
+VoiceNotesAI.Infra.Interfaces (net8.0)  — Service interfaces (refs Domain)
+VoiceNotesAI.Infra         (net8.0)  — Service implementations + Data (refs Domain + Infra.Interfaces)
+VoiceNotesAI               (MAUI)    — UI layer: Pages, ViewModels, Converters (refs all 3)
+VoiceNotesAI.Tests          (net8.0)  — Unit tests (refs Domain + Infra.Interfaces + Infra)
+```
+
+All projects use `<RootNamespace>VoiceNotesAI</RootNamespace>` to share namespaces.
+
 ### Key Layers
 
-- **Models/** — `Note` (SQLite entity), `NoteResult` (AI response DTO), `Category`
-- **Services/** — All behind interfaces (`IAudioService`, `ISpeechToTextService`, `IAIService`, `INoteRepository`) for testability. HTTP calls use injected `HttpClient`.
-- **ViewModels/** — `RecordingViewModel`, `NoteListViewModel`, `NoteDetailViewModel`, `NoteResultViewModel`. Use `[ObservableProperty]` and `[RelayCommand]` attributes.
-- **Pages/** — XAML pages bound to ViewModels. Shell navigation defined in `AppShell.xaml`.
-- **Data/AppDatabase.cs** — SQLiteAsyncConnection wrapper; seeds 6 default categories on first run.
-- **Helpers/PromptTemplates.cs** — System prompt for GPT-4 note structuring (in Portuguese).
+- **VoiceNotesAI.Domain** — `Note`, `NoteResult`, `Category`, `Comment`, `AppSetting` (SQLite entities/DTOs); `OpenAISettings`, `PromptTemplates` (helpers).
+- **VoiceNotesAI.Infra.Interfaces** — Service interfaces (`IAIService`, `IAudioService`, `ISpeechToTextService`, `INoteRepository`, `ICategoryRepository`, `ICommentRepository`, `ISettingsRepository`).
+- **VoiceNotesAI.Infra** — `AppDatabase` (SQLite wrapper), repository implementations, `AIService`, `SpeechToTextService`.
+- **VoiceNotesAI (MAUI)** — `AudioService` (only service that stays here, depends on Plugin.Maui.Audio), ViewModels (`[ObservableProperty]`/`[RelayCommand]`), Pages (XAML + Shell navigation), Converters.
 
 ### DI Registration (MauiProgram.cs)
 - **Singleton:** `OpenAISettings`, `AppDatabase`, `HttpClient`, `AudioManager`
@@ -53,7 +63,7 @@ OpenAI API settings are in `appsettings.json` (gitignored). See `appsettings.exa
 
 - **Framework:** xUnit + Moq
 - **Pattern:** Services tested by mocking `HttpMessageHandler`; repository tests use temporary SQLite databases with `IAsyncLifetime` for setup/teardown.
-- Tests live in `VoiceNotesAI.Tests/` mirroring the main project structure (Services/, Models/, Helpers/).
+- Tests reference Domain, Infra.Interfaces, and Infra projects directly (no linked source files).
 
 ## CI/CD
 

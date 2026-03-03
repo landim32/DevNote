@@ -62,7 +62,7 @@ jobs:
       run: cp VoiceNotesAI/appsettings.example.json VoiceNotesAI/appsettings.json
 
     - name: Restore dependencies
-      run: dotnet restore VoiceNotesAI/VoiceNotesAI.csproj
+      run: dotnet restore VoiceNotesAI.sln
 
     # ============================================================
     # SIGNING (descomente quando tiver o keystore configurado)

@@ -24,8 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
-    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.91" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.91" />
@@ -34,6 +32,12 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
     <PackageReference Include="Plugin.Maui.Audio" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VoiceNotesAI.Domain\VoiceNotesAI.Domain.csproj" />
+    <ProjectReference Include="..\VoiceNotesAI.Infra.Interfaces\VoiceNotesAI.Infra.Interfaces.csproj" />
+    <ProjectReference Include="..\VoiceNotesAI.Infra\VoiceNotesAI.Infra.csproj" />
   </ItemGroup>
 
   <ItemGroup>
