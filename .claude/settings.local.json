@@ -9,7 +9,24 @@
       "Bash(\"C:/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\" shell:*)",
       "Bash(rmdir:*)",
       "Bash(dotnet test:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(\"C:/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\" logcat:*)",
+      "Bash(\"C:/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\":*)",
+      "Bash(\"/c/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\" devices:*)",
+      "Bash(do echo:*)",
+      "Bash(\"/c/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\" shell:*)",
+      "Bash(\"$ADB\" exec-out:*)",
+      "Bash(\"$ADB\" shell:*)",
+      "Bash(\"$ADB\":*)",
+      "Bash(\"$ADB\" devices:*)",
+      "Bash(ADB=\"/c/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\"; file \"/c/repos/VoiceNotesAI/VoiceNotesAI/Resources/AppIcon/appicon_fg.png\" 2>&1; ls -lh \"/c/repos/VoiceNotesAI/VoiceNotesAI/Resources/AppIcon/appicon_fg.png\" 2>&1)",
+      "Bash(convert:*)",
+      "Bash(powershell:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(ls:*)",
+      "Skill(execute)",
+      "Bash(export:*)",
+      "Bash(\"/c/Program Files \\(x86\\)/Android/android-sdk/emulator/emulator.exe\":*)"
     ]
   }
 }

@@ -32,6 +32,22 @@ public partial class NoteListViewModel : ObservableObject
     [ObservableProperty]
     private bool _isEmpty;
 
+    [ObservableProperty]
+    private bool _isFabMenuOpen;
+
+    [RelayCommand]
+    private void ToggleFabMenu()
+    {
+        IsFabMenuOpen = !IsFabMenuOpen;
+    }
+
+    [RelayCommand]
+    private async Task GoToNewTextNoteAsync()
+    {
+        IsFabMenuOpen = false;
+        await Shell.Current.GoToAsync("NoteDetailPage");
+    }
+
     [RelayCommand]
     private async Task LoadNotesAsync()
     {
@@ -68,6 +84,7 @@ public partial class NoteListViewModel : ObservableObject
     [RelayCommand]
     private async Task GoToRecordingAsync()
     {
+        IsFabMenuOpen = false;
         await Shell.Current.GoToAsync("RecordingPage");
     }
 

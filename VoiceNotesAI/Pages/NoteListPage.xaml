@@ -118,7 +118,90 @@
             </CollectionView>
         </Grid>
 
-        <!-- FAB Record Button (floating overlay) -->
+        <!-- FAB Menu Backdrop -->
+        <BoxView Color="#000000"
+                 Opacity="0.4"
+                 IsVisible="{Binding IsFabMenuOpen}"
+                 HorizontalOptions="Fill"
+                 VerticalOptions="Fill">
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding ToggleFabMenuCommand}" />
+            </BoxView.GestureRecognizers>
+        </BoxView>
+
+        <!-- FAB Menu Options -->
+        <VerticalStackLayout IsVisible="{Binding IsFabMenuOpen}"
+                             HorizontalOptions="End"
+                             VerticalOptions="End"
+                             Margin="0,0,8,96"
+                             Spacing="12">
+
+            <!-- Text Note Option -->
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="End">
+                <Label Text="Nota de Texto"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource White}"
+                       VerticalOptions="Center"
+                       Padding="10,6"
+                       BackgroundColor="#CC333333">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToNewTextNoteCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Border StrokeThickness="0"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        Shadow="{Shadow Brush=Black, Offset='1,2', Radius=4, Opacity=0.3}"
+                        StrokeShape="RoundRectangle 24">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToNewTextNoteCommand}" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                          Fill="White"
+                          Aspect="Uniform"
+                          WidthRequest="22"
+                          HeightRequest="22"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center" />
+                </Border>
+            </HorizontalStackLayout>
+
+            <!-- Voice Note Option -->
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="End">
+                <Label Text="Nota de Voz"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource White}"
+                       VerticalOptions="Center"
+                       Padding="10,6"
+                       BackgroundColor="#CC333333">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToRecordingCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Border StrokeThickness="0"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        Shadow="{Shadow Brush=Black, Offset='1,2', Radius=4, Opacity=0.3}"
+                        StrokeShape="RoundRectangle 24">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToRecordingCommand}" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"
+                          Fill="White"
+                          Aspect="Uniform"
+                          WidthRequest="22"
+                          HeightRequest="22"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center" />
+                </Border>
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- FAB Main Button -->
         <Border StrokeThickness="0"
                 WidthRequest="64"
                 HeightRequest="64"
@@ -129,15 +212,13 @@
                 Shadow="{Shadow Brush=Black, Offset='2,4', Radius=8, Opacity=0.3}"
                 StrokeShape="RoundRectangle 32">
             <Border.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding GoToRecordingCommand}" />
+                <TapGestureRecognizer Command="{Binding ToggleFabMenuCommand}" />
             </Border.GestureRecognizers>
-            <Path Data="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"
-                  Fill="White"
-                  Aspect="Uniform"
-                  WidthRequest="26"
-                  HeightRequest="26"
-                  HorizontalOptions="Center"
-                  VerticalOptions="Center" />
+            <Label Text="{Binding IsFabMenuOpen, Converter={StaticResource FabIconConverter}}"
+                   FontSize="28"
+                   TextColor="White"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center" />
         </Border>
     </Grid>
 

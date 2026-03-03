@@ -19,6 +19,7 @@ public class AppDatabase
         await _database.CreateTableAsync<Note>();
         await _database.CreateTableAsync<Category>();
         await _database.CreateTableAsync<AppSetting>();
+        await _database.CreateTableAsync<Comment>();
 
         await SeedCategoriesAsync();
     }

@@ -194,4 +194,71 @@ public class AIServiceTests
         await Assert.ThrowsAsync<JsonException>(
             () => service.InterpretNoteAsync("texto"));
     }
+
+    [Fact]
+    public async Task ConsolidateNoteAsync_ValidResponse_ShouldReturnConsolidatedText()
+    {
+        var consolidatedText = "Nota consolidada com todos os comentários integrados.";
+        var responseJson = BuildConsolidationResponse(consolidatedText);
+
+        var httpClient = CreateMockHttpClient(HttpStatusCode.OK, responseJson);
+        var service = new AIService(httpClient, CreateSettings());
+
+        var result = await service.ConsolidateNoteAsync(
+            "Minha nota original",
+            new List<string> { "Comentário 1", "Comentário 2" });
+
+        Assert.Equal(consolidatedText, result);
+    }
+
+    [Fact]
+    public async Task ConsolidateNoteAsync_ApiError_ShouldThrowHttpRequestException()
+    {
+        var httpClient = CreateMockHttpClient(HttpStatusCode.InternalServerError, "Error");
+        var service = new AIService(httpClient, CreateSettings());
+
+        await Assert.ThrowsAsync<HttpRequestException>(
+            () => service.ConsolidateNoteAsync("nota", new List<string> { "comment" }));
+    }
+
+    [Fact]
+    public async Task ConsolidateNoteAsync_EmptyContent_ShouldThrowInvalidOperationException()
+    {
+        var responseJson = JsonSerializer.Serialize(new
+        {
+            choices = new[]
+            {
+                new
+                {
+                    message = new
+                    {
+                        content = (string?)null
+                    }
+                }
+            }
+        });
+
+        var httpClient = CreateMockHttpClient(HttpStatusCode.OK, responseJson);
+        var service = new AIService(httpClient, CreateSettings());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.ConsolidateNoteAsync("nota", new List<string> { "comment" }));
+    }
+
+    private static string BuildConsolidationResponse(string consolidatedText)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            choices = new[]
+            {
+                new
+                {
+                    message = new
+                    {
+                        content = consolidatedText
+                    }
+                }
+            }
+        });
+    }
 }

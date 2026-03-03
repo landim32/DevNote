@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VoiceNotesAI.Helpers;
@@ -34,6 +35,24 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isLoading;
+
+    public ObservableCollection<string> AvailableGptModels { get; } =
+    [
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gpt-4.1",
+        "gpt-4.1-mini",
+        "gpt-4.1-nano",
+        "gpt-4.5-preview",
+        "o4-mini"
+    ];
+
+    public ObservableCollection<string> AvailableWhisperModels { get; } =
+    [
+        "gpt-4o-mini-transcribe",
+        "gpt-4o-transcribe",
+        "whisper-1"
+    ];
 
     [RelayCommand]
     private async Task LoadSettingsAsync()

@@ -15,6 +15,7 @@ public partial class NoteListPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _viewModel.IsFabMenuOpen = false;
         await _viewModel.LoadNotesCommand.ExecuteAsync(null);
     }
 }

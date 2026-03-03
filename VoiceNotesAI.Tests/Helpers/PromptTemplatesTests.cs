@@ -52,4 +52,45 @@ public class PromptTemplatesTests
     {
         Assert.Contains("{{TRANSCRIBED_TEXT}}", PromptTemplates.NoteInterpretation);
     }
+
+    [Fact]
+    public void BuildConsolidationPrompt_ShouldReplaceNoteContentPlaceholder()
+    {
+        var noteContent = "Minha nota sobre reunião";
+        var comments = new List<string> { "Adicionar item X", "Revisar item Y" };
+
+        var prompt = PromptTemplates.BuildConsolidationPrompt(noteContent, comments);
+
+        Assert.Contains(noteContent, prompt);
+        Assert.DoesNotContain("{{NOTE_CONTENT}}", prompt);
+    }
+
+    [Fact]
+    public void BuildConsolidationPrompt_ShouldReplaceCommentsPlaceholder()
+    {
+        var comments = new List<string> { "Primeiro comentário", "Segundo comentário" };
+
+        var prompt = PromptTemplates.BuildConsolidationPrompt("Nota", comments);
+
+        Assert.Contains("Primeiro comentário", prompt);
+        Assert.Contains("Segundo comentário", prompt);
+        Assert.DoesNotContain("{{COMMENTS}}", prompt);
+    }
+
+    [Fact]
+    public void BuildConsolidationPrompt_WithEmptyComments_ShouldStillBuildPrompt()
+    {
+        var prompt = PromptTemplates.BuildConsolidationPrompt("Nota teste", new List<string>());
+
+        Assert.Contains("Nota teste", prompt);
+        Assert.Contains("Nenhum comentário", prompt);
+        Assert.DoesNotContain("{{COMMENTS}}", prompt);
+    }
+
+    [Fact]
+    public void NoteConsolidation_ShouldContainPlaceholders()
+    {
+        Assert.Contains("{{NOTE_CONTENT}}", PromptTemplates.NoteConsolidation);
+        Assert.Contains("{{COMMENTS}}", PromptTemplates.NoteConsolidation);
+    }
 }

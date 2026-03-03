@@ -37,6 +37,9 @@
     <Compile Include="..\VoiceNotesAI\Models\AppSetting.cs" Link="LinkedSources\Models\AppSetting.cs" />
     <Compile Include="..\VoiceNotesAI\Services\AIService.cs" Link="LinkedSources\Services\AIService.cs" />
     <Compile Include="..\VoiceNotesAI\Services\SpeechToTextService.cs" Link="LinkedSources\Services\SpeechToTextService.cs" />
+    <Compile Include="..\VoiceNotesAI\Models\Comment.cs" Link="LinkedSources\Models\Comment.cs" />
+    <Compile Include="..\VoiceNotesAI\Services\ICommentRepository.cs" Link="LinkedSources\Services\ICommentRepository.cs" />
+    <Compile Include="..\VoiceNotesAI\Services\CommentRepository.cs" Link="LinkedSources\Services\CommentRepository.cs" />
   </ItemGroup>
 
 </Project>

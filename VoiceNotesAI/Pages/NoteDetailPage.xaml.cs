@@ -16,5 +16,6 @@ public partial class NoteDetailPage : ContentPage
     {
         base.OnAppearing();
         await _viewModel.LoadCategoriesCommand.ExecuteAsync(null);
+        await _viewModel.LoadCommentsCommand.ExecuteAsync(null);
     }
 }

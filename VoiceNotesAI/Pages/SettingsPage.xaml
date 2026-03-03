@@ -33,7 +33,7 @@
                        TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
                 <Entry Text="{Binding ApiKey}"
                        Placeholder="sk-..."
-                       IsPassword="True"
+                       IsPassword="False"
                        FontSize="14"
                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
                        TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
@@ -46,32 +46,24 @@
                        FontSize="13"
                        FontAttributes="Bold"
                        TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
-                <Entry Text="{Binding GptModel}"
-                       Placeholder="gpt-4o"
-                       FontSize="14"
-                       BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
-                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
-                       PlaceholderColor="{StaticResource Gray400}" />
-                <Label Text="Ex: gpt-4o, gpt-4o-mini, gpt-3.5-turbo"
-                       FontSize="11"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}" />
+                <Picker Title="Selecione o modelo GPT"
+                        ItemsSource="{Binding AvailableGptModels}"
+                        SelectedItem="{Binding GptModel}"
+                        TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}" />
             </VerticalStackLayout>
 
             <!-- Whisper Model -->
             <VerticalStackLayout Spacing="4">
-                <Label Text="Modelo Whisper"
+                <Label Text="Modelo de Transcrição"
                        FontSize="13"
                        FontAttributes="Bold"
                        TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
-                <Entry Text="{Binding WhisperModel}"
-                       Placeholder="whisper-1"
-                       FontSize="14"
-                       BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
-                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
-                       PlaceholderColor="{StaticResource Gray400}" />
-                <Label Text="Ex: whisper-1"
-                       FontSize="11"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}" />
+                <Picker Title="Selecione o modelo de transcrição"
+                        ItemsSource="{Binding AvailableWhisperModels}"
+                        SelectedItem="{Binding WhisperModel}"
+                        TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}" />
             </VerticalStackLayout>
 
             <!-- Save Button -->

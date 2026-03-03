@@ -55,6 +55,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<INoteRepository, NoteRepository>();
         builder.Services.AddSingleton<ICategoryRepository, CategoryRepository>();
         builder.Services.AddSingleton<ISettingsRepository, SettingsRepository>();
+        builder.Services.AddSingleton<ICommentRepository, CommentRepository>();
 
         // ViewModels
         builder.Services.AddTransient<NoteListViewModel>();
