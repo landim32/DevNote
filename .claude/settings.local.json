@@ -29,7 +29,12 @@
       "Bash(\"/c/Program Files \\(x86\\)/Android/android-sdk/emulator/emulator.exe\":*)",
       "Bash(mkdir:*)",
       "Bash(dotnet sln:*)",
-      "Bash(\"C:/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\" uninstall:*)"
+      "Bash(\"C:/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\" uninstall:*)",
+      "WebSearch",
+      "WebFetch(domain:dotnet.github.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:ejball.com)",
+      "WebFetch(domain:dailystuff.nl)"
     ]
   }
 }
