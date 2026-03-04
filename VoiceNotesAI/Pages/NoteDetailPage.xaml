@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:VoiceNotesAI.ViewModels"
-             xmlns:models="clr-namespace:VoiceNotesAI.Models;assembly=VoiceNotesAI.Domain"
+             xmlns:dto="clr-namespace:VoiceNotesAI.DTOs;assembly=VoiceNotesAI.DTO"
              x:Class="VoiceNotesAI.Pages.NoteDetailPage"
              x:DataType="vm:NoteDetailViewModel"
              Title="{Binding PageTitle}"
@@ -73,7 +73,7 @@
                     <CollectionView ItemsSource="{Binding Comments}"
                                     SelectionMode="None">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:Comment">
+                            <DataTemplate x:DataType="dto:CommentInfo">
                                 <SwipeView>
                                     <SwipeView.RightItems>
                                         <SwipeItems>

@@ -1,35 +1,43 @@
+using AutoMapper;
 using VoiceNotesAI.Context;
+using VoiceNotesAI.DTOs;
 using VoiceNotesAI.Models;
 
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.Repository;
 
 public class CategoryRepository : ICategoryRepository
 {
     private readonly AppDatabase _database;
+    private readonly IMapper _mapper;
 
-    public CategoryRepository(AppDatabase database)
+    public CategoryRepository(AppDatabase database, IMapper mapper)
     {
         _database = database;
+        _mapper = mapper;
     }
 
-    public async Task<List<Category>> GetAllAsync()
+    public async Task<List<CategoryInfo>> GetAllAsync()
     {
-        return await _database.Connection
+        var categories = await _database.Connection
             .Table<Category>()
             .OrderBy(c => c.Name)
             .ToListAsync();
+        return _mapper.Map<List<CategoryInfo>>(categories);
     }
 
-    public async Task<Category?> GetByIdAsync(int id)
+    public async Task<CategoryInfo?> GetByIdAsync(int id)
     {
-        return await _database.Connection
+        var category = await _database.Connection
             .Table<Category>()
             .Where(c => c.Id == id)
             .FirstOrDefaultAsync();
+        return category is null ? null : _mapper.Map<CategoryInfo>(category);
     }
 
-    public async Task<int> SaveAsync(Category category)
+    public async Task<int> SaveAsync(CategoryInfo categoryInfo)
     {
+        var category = _mapper.Map<Category>(categoryInfo);
+
         if (category.Id != 0)
         {
             return await _database.Connection.UpdateAsync(category);

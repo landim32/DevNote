@@ -2,16 +2,16 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using VoiceNotesAI.Helpers;
 
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.AppServices;
 
-public class SpeechToTextService : ISpeechToTextService
+public class SpeechToTextAppService : ISpeechToTextAppService
 {
     private const string WhisperEndpoint = "https://api.openai.com/v1/audio/transcriptions";
 
     private readonly HttpClient _httpClient;
     private readonly OpenAISettings _settings;
 
-    public SpeechToTextService(HttpClient httpClient, OpenAISettings settings)
+    public SpeechToTextAppService(HttpClient httpClient, OpenAISettings settings)
     {
         _httpClient = httpClient;
         _settings = settings;

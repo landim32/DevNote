@@ -3,7 +3,7 @@ using System.Text;
 using Moq;
 using Moq.Protected;
 using VoiceNotesAI.Helpers;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.AppServices;
 
 namespace VoiceNotesAI.Tests.Services;
 
@@ -18,7 +18,7 @@ public class SpeechToTextServiceTests
     public async Task TranscribeAsync_FileNotFound_ShouldThrowFileNotFoundException()
     {
         var httpClient = new HttpClient();
-        var service = new SpeechToTextService(httpClient, CreateSettings());
+        var service = new SpeechToTextAppService(httpClient, CreateSettings());
 
         await Assert.ThrowsAsync<FileNotFoundException>(
             () => service.TranscribeAsync("/path/that/does/not/exist.wav"));
@@ -48,7 +48,7 @@ public class SpeechToTextServiceTests
                 });
 
             var httpClient = new HttpClient(handler.Object);
-            var service = new SpeechToTextService(httpClient, CreateSettings());
+            var service = new SpeechToTextAppService(httpClient, CreateSettings());
 
             var result = await service.TranscribeAsync(tempFile);
 
@@ -84,7 +84,7 @@ public class SpeechToTextServiceTests
                 });
 
             var httpClient = new HttpClient(handler.Object);
-            var service = new SpeechToTextService(httpClient, CreateSettings(apiKey: "my-whisper-key"));
+            var service = new SpeechToTextAppService(httpClient, CreateSettings(apiKey: "my-whisper-key"));
 
             await service.TranscribeAsync(tempFile);
 
@@ -120,7 +120,7 @@ public class SpeechToTextServiceTests
                 });
 
             var httpClient = new HttpClient(handler.Object);
-            var service = new SpeechToTextService(httpClient, CreateSettings());
+            var service = new SpeechToTextAppService(httpClient, CreateSettings());
 
             await Assert.ThrowsAsync<HttpRequestException>(
                 () => service.TranscribeAsync(tempFile));

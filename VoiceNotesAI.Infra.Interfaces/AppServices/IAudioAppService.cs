@@ -1,6 +1,6 @@
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.AppServices;
 
-public interface IAudioService
+public interface IAudioAppService
 {
     bool IsRecording { get; }
     Task<string> StartRecordingAsync();

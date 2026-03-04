@@ -1,13 +1,13 @@
 ---
 name: maui-architecture
-description: Guides the implementation of a new entity following the MVVM + layered architecture for .NET MAUI apps. Covers all layers from SQLite Model to Page, including Repository pattern, ViewModel with CommunityToolkit.Mvvm, XAML Page, AppDatabase registration, and DI setup. Use when creating or modifying entities, adding new tables, or scaffolding CRUD features in any MAUI project.
+description: Guides the implementation of a new entity following the MVVM + layered architecture for .NET MAUI apps. Covers all layers from SQLite Model to Page, including Repository pattern, Rich Domain entities, Domain Services, AppServices, DTOs with AutoMapper, ViewModel with CommunityToolkit.Mvvm, XAML Page, AppDatabase registration, and DI setup. Use when creating or modifying entities, adding new tables, or scaffolding CRUD features in any MAUI project.
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit, Task
 user-invocable: true
 ---
 
 # .NET MAUI Layered Architecture — Entity Implementation Guide
 
-You are an expert assistant that helps developers create or modify entities following the MVVM + layered architecture pattern for .NET MAUI mobile apps. You guide the user through ALL required layers.
+You are an expert assistant that helps developers create or modify entities following the MVVM + layered architecture pattern for .NET MAUI mobile apps, applying **Rich Domain** principles.
 
 ## Input
 
@@ -15,199 +15,293 @@ The user will describe the entity to create or modify: `$ARGUMENTS`
 
 ## Before You Start
 
-1. **Discover the project structure.** Run `dotnet sln list` and `ls` to identify project names and folder layout.
-2. **Identify the naming convention.** The placeholder `{App}` below stands for the actual project root namespace (e.g., `MyApp`, `VoiceNotesAI`). Replace it everywhere.
-3. **Read at least one existing entity end-to-end** (Model → Interface → Repository → ViewModel → Page) to match the codebase's exact style, naming, and patterns before generating any code.
-4. **Detect the app language.** Check existing UI strings (DisplayAlert, Labels, Titles) to determine the language used in the app and match it in new code.
+1. Run `dotnet sln list` and `ls` to discover project names and folder layout.
+2. The placeholder `{App}` stands for the actual root namespace. Replace it everywhere.
+3. **Read at least one existing entity end-to-end** (Model → DTO → Interface → Repository → Mapper → ViewModel → Page) to match style.
+4. Check existing UI strings to detect the app language and match it.
 
 ---
 
-## Recommended Project Structure
+## Project Structure & Dependencies
 
 ```
 {App}.sln
-├── {App}.Domain/              ← Models + Helpers (net8.0, no deps)
-├── {App}.Infra.Interfaces/    ← Service/Repository interfaces (net8.0, refs Domain)
-├── {App}.Infra/               ← Implementations + Context (net8.0, refs Domain + Infra.Interfaces)
-├── {App}/                     ← MAUI app: Pages, ViewModels, Converters (refs all 3)
-└── {App}.Tests/               ← Unit tests (refs Domain + Infra.Interfaces + Infra)
+├── {App}.Domain/              ← Models (Rich Domain) + Services + Helpers (refs Infra.Interfaces)
+├── {App}.DTO/                 ← DTOs with "Info" suffix (net8.0, no deps)
+├── {App}.Infra.Interfaces/    ← Interfaces for Repos, Services & AppServices (refs Domain + DTO)
+├── {App}.Infra/               ← AppServices + Repos + Context + Mappers (refs Domain + DTO + Infra.Interfaces)
+├── {App}.Application/         ← DI composition root for Domain Services (refs Domain)
+├── {App}/                     ← MAUI: Pages, ViewModels, Converters (refs all projects)
+└── {App}.Tests/               ← Unit tests (refs Domain + DTO + Infra.Interfaces + Infra)
 ```
 
-**Dependency flow (no cycles):**
 ```
-Domain ← Infra.Interfaces ← Infra
-               ↑                ↑
-               └── MAUI ────────┘
-                    ↑
-                  Tests
+DTO (no deps)    Infra.Interfaces (refs Domain + DTO)
+      ↑                ↑
+      ├── Domain ──────┘ (refs Infra.Interfaces)
+      ├── Infra ─────────  (refs Domain + DTO + Infra.Interfaces)
+      ├── Application ───  (refs Domain) → DI composition root for Domain Services
+      └── MAUI ──────────  (refs all including Application) → Tests
 ```
 
-All projects should use `<RootNamespace>{App}</RootNamespace>` to share namespaces and avoid `using` changes when moving files between projects.
-
-> **Note:** If the project uses a single-project structure (all code inside the MAUI project), adapt the file paths accordingly — the patterns and layer separation remain the same, just within a single project.
+All projects use `<RootNamespace>{App}</RootNamespace>` to share namespaces.
 
 ---
 
-## Architecture & Data Flow
+## Architecture Principles
+
+### Rich Domain Model
+
+Entities contain **business rules, validation, and behavior** — NOT anemic data bags:
+- Entities encapsulate invariants (validation, state transitions, computed properties)
+- Mutable with controlled state changes via methods
+- SQLite attributes coexist with domain logic
+
+### DTOs (Data Transfer Objects)
+
+- Live in `{App}.DTO` project — pure data classes, **no logic, no attributes**
+- Named with **"Info" suffix**: `{Entity}Info`
+- Used by ViewModels and service interfaces as input/output contracts
+- **Never** expose domain Models to the UI layer — always map to/from DTOs
+
+### Mapping Flow
 
 ```
-Page (XAML) → ViewModel → Repository Interface → Repository → AppDatabase → SQLite
+DB (SQLite) → Repository → Model (Domain) → AutoMapper → {Entity}Info (DTO) → ViewModel → Page
+Page → ViewModel → {Entity}Info (DTO) → AutoMapper → Model (Domain) → Repository → DB
 ```
 
-**Key packages:**
-- `sqlite-net-pcl` + `SQLitePCLRaw.bundle_green` — SQLite ORM
-- `CommunityToolkit.Mvvm` — MVVM source generators (`[ObservableProperty]`, `[RelayCommand]`)
-- `Plugin.Maui.Audio` — only if audio features are needed
+### Layer Responsibilities
+
+| Layer | Contains | Responsibility |
+|-------|----------|----------------|
+| **Domain** | Rich Entities + Services | Business rules. Entities own invariants. Services depend ONLY on Infra.Interfaces. |
+| **DTO** | Info classes | Pure data transfer. No logic, no deps. Suffix "Info". |
+| **Infra.Interfaces** | Interfaces | Contracts for Repos, Services, AppServices. |
+| **Infra** | AppServices + Repos + Context + Mappers | Infrastructure + AutoMapper profiles. |
+| **Application** | DependencyInjection extension | Composition root: registers Domain Services into DI. Refs Domain only. |
+| **MAUI** | Pages + ViewModels + Converters | UI. ViewModels work with DTOs (Info), not Models. |
+
+**Packages:** `sqlite-net-pcl` + `SQLitePCLRaw.bundle_green`, `CommunityToolkit.Mvvm`, `AutoMapper.Extensions.Microsoft.DependencyInjection`, `Microsoft.Extensions.DependencyInjection.Abstractions` (Application project)
 
 ---
 
 ## Step-by-Step Implementation
 
-### Step 1: SQLite Model — `{App}.Domain/Models/{Entity}.cs`
+### Step 1: Rich Domain Entity — `{App}.Domain/Models/{Entity}.cs`
 
 ```csharp
 using SQLite;
-
 namespace {App}.Models;
 
 public class {Entity}
 {
     [PrimaryKey, AutoIncrement]
     public int Id { get; set; }
-
     public string Name { get; set; } = string.Empty;
-
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // --- Domain Logic ---
+    public string? Validate()
+    {
+        if (string.IsNullOrWhiteSpace(Name)) return "Name is required.";
+        if (Name.Length > 200) return "Name cannot exceed 200 characters.";
+        return null;
+    }
+
+    public void Update(string name)
+    {
+        Name = name;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public static {Entity} Create(string name)
+    {
+        var entity = new {Entity} { Name = name };
+        var error = entity.Validate();
+        if (error != null) throw new InvalidOperationException(error);
+        return entity;
+    }
 }
 ```
 
-**Conventions:**
-- `[PrimaryKey, AutoIncrement]` on `int Id`
-- Default values on string properties (`= string.Empty`)
-- `DateTime.UtcNow` as default for timestamps
-- `[Indexed]` for foreign key columns or frequently filtered fields
-- No navigation properties — sqlite-net-pcl does not support them
+**Conventions:** `Validate()` returns error or null · `Update()` controls state + sets UpdatedAt · `Create()` factory enforces validation · `[Indexed]` on FKs · No navigation properties
 
-### Step 2: Repository Interface — `{App}.Infra.Interfaces/Services/I{Entity}Repository.cs`
+### Step 2: DTO — `{App}.DTO/DTOs/{Entity}Info.cs`
+
+```csharp
+namespace {App}.DTOs;
+
+public class {Entity}Info
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+```
+
+**DTO conventions:**
+- Suffix **"Info"** always: `NoteInfo`, `CategoryInfo`, `CommentInfo`
+- No SQLite attributes, no validation, no methods — pure data
+- Mirror the properties the UI/consumers need (can omit internal-only fields)
+- No dependency on any other project
+
+### Step 3: Repository Interface — `{App}.Infra.Interfaces/Services/I{Entity}Repository.cs`
 
 ```csharp
 using {App}.Models;
-
 namespace {App}.Services;
 
 public interface I{Entity}Repository
 {
     Task<List<{Entity}>> GetAllAsync();
     Task<{Entity}?> GetByIdAsync(int id);
-    Task<int> SaveAsync({Entity} entity);
+    Task<int> SaveAsync({Entity} entity);   // upsert
     Task<int> DeleteAsync(int id);
 }
 ```
 
-**Conventions:**
-- All methods return `Task<>` (async)
-- `SaveAsync` handles both insert and update (upsert pattern)
-- `GetByIdAsync` returns nullable
-- Add domain-specific queries as needed (e.g., `GetByParentIdAsync(int parentId)`)
+Repositories work with **Models** (Domain). The mapping to DTOs happens at the ViewModel/Service level.
 
-### Step 3: Repository Implementation — `{App}.Infra/Services/{Entity}Repository.cs`
+### Step 4: Domain Service (when needed) — `{App}.Domain/Services/{Entity}Service.cs`
+
+For business rules spanning multiple entities. Depends ONLY on interfaces — never concrete classes. Does NOT call external APIs.
+
+```csharp
+using {App}.Models;
+namespace {App}.Services;
+
+public class {Entity}Service
+{
+    private readonly I{Entity}Repository _{entity}Repository;
+    public {Entity}Service(I{Entity}Repository repo) => _{entity}Repository = repo;
+
+    public async Task<string?> ValidateUniqueNameAsync(string name, int? excludeId = null)
+    {
+        var all = await _{entity}Repository.GetAllAsync();
+        var dup = all.Any(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && e.Id != (excludeId ?? 0));
+        return dup ? "Name already exists." : null;
+    }
+}
+```
+
+### Step 5: AppService (when needed) — Interface + Implementation
+
+**Interface** in `{App}.Infra.Interfaces/Services/I{Entity}AppService.cs`:
+```csharp
+public interface I{Entity}AppService { Task<string> ProcessAsync({Entity} entity); }
+```
+
+**Implementation** in `{App}.Infra/AppServices/{Entity}AppService.cs` — infrastructure only (external APIs, HTTP). NO business rules.
+
+### Step 6: Application DI Registration — `{App}.Application/DependencyInjection.cs`
+
+The Application project is the **composition root** for Domain Services. It contains a single static extension method that registers all Domain Services into the DI container. This keeps `MauiProgram.cs` clean and centralizes service registration.
+
+**Project:** `{App}.Application.csproj` (net8.0, refs Domain only, uses `Microsoft.Extensions.DependencyInjection.Abstractions`)
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+
+namespace {App}.AppConfiguration;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    {
+        // Domain Services
+        services.AddSingleton<Services.I{Entity}Service, Services.{Entity}Service>();
+
+        return services;
+    }
+}
+```
+
+**Conventions:**
+- **One file** per project — all Domain Service registrations go here
+- Extension method `AddApplicationServices()` called from `MauiProgram.cs`
+- Namespace: `{App}.AppConfiguration`
+- References only `{App}.Domain` — never Infra or MAUI
+- Uses `Microsoft.Extensions.DependencyInjection.Abstractions` package (not the full DI package)
+- **Singleton** lifetime for Domain Services (stateless, thread-safe)
+- When adding a new entity with a Domain Service, **append** to this file — do NOT create a new file
+
+### Step 7: AutoMapper Profile — `{App}.Infra/Mappers/{Entity}Profile.cs`
+
+```csharp
+using AutoMapper;
+using {App}.DTOs;
+using {App}.Models;
+
+namespace {App}.Mappers;
+
+public class {Entity}Profile : Profile
+{
+    public {Entity}Profile()
+    {
+        CreateMap<{Entity}, {Entity}Info>();          // Model → DTO (read)
+        CreateMap<{Entity}Info, {Entity}>()           // DTO → Model (write)
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+    }
+}
+```
+
+**Mapper conventions:**
+- One Profile per entity in `{App}.Infra/Mappers/`
+- Model → Info: direct map (all readable props)
+- Info → Model: **ignore** managed fields (`CreatedAt`, `UpdatedAt`) — the entity's `Update()`/`Create()` methods control those
+- AutoMapper auto-discovered via `AddAutoMapper(assembly)` in DI
+
+### Step 8: Repository Implementation — `{App}.Infra/Services/{Entity}Repository.cs`
 
 ```csharp
 using {App}.Data;
 using {App}.Models;
-
 namespace {App}.Services;
 
 public class {Entity}Repository : I{Entity}Repository
 {
     private readonly AppDatabase _database;
+    public {Entity}Repository(AppDatabase database) => _database = database;
 
-    public {Entity}Repository(AppDatabase database)
-    {
-        _database = database;
-    }
+    public async Task<List<{Entity}>> GetAllAsync() =>
+        await _database.Connection.Table<{Entity}>().OrderBy(e => e.Name).ToListAsync();
 
-    public async Task<List<{Entity}>> GetAllAsync()
-    {
-        return await _database.Connection
-            .Table<{Entity}>()
-            .OrderBy(e => e.Name)
-            .ToListAsync();
-    }
+    public async Task<{Entity}?> GetByIdAsync(int id) =>
+        await _database.Connection.Table<{Entity}>().Where(e => e.Id == id).FirstOrDefaultAsync();
 
-    public async Task<{Entity}?> GetByIdAsync(int id)
-    {
-        return await _database.Connection
-            .Table<{Entity}>()
-            .Where(e => e.Id == id)
-            .FirstOrDefaultAsync();
-    }
+    public async Task<int> SaveAsync({Entity} entity) =>
+        entity.Id != 0
+            ? await _database.Connection.UpdateAsync(entity)
+            : await _database.Connection.InsertAsync(entity);
 
-    public async Task<int> SaveAsync({Entity} entity)
-    {
-        if (entity.Id != 0)
-        {
-            entity.UpdatedAt = DateTime.UtcNow;
-            return await _database.Connection.UpdateAsync(entity);
-        }
-
-        return await _database.Connection.InsertAsync(entity);
-    }
-
-    public async Task<int> DeleteAsync(int id)
-    {
-        return await _database.Connection.DeleteAsync<{Entity}>(id);
-    }
+    public async Task<int> DeleteAsync(int id) =>
+        await _database.Connection.DeleteAsync<{Entity}>(id);
 }
 ```
 
-**Conventions:**
-- Inject `AppDatabase`, use `_database.Connection` for all queries
-- Upsert in `SaveAsync`: `Id != 0` → update, else insert
-- Set `UpdatedAt` on update if the model has timestamps
-- Use fluent LINQ via `Table<T>()` with `OrderBy`, `Where`, etc.
-- No try/catch in repository — let exceptions bubble up to ViewModel
+**Conventions:** Upsert via `Id != 0` · Repo does NOT set UpdatedAt (entity handles it) · No try/catch · No business logic
 
-### Step 4: Register Table — Modify `{App}.Infra/Context/AppDatabase.cs`
+### Step 9: Register Table — `{App}.Infra/Context/AppDatabase.cs`
 
-Add to `InitializeAsync()`:
+Add to `InitializeAsync()`: `await _database.CreateTableAsync<{Entity}>();`
+
+### Step 10: List ViewModel — `{App}/ViewModels/{Entity}ListViewModel.cs`
 
 ```csharp
-await _database.CreateTableAsync<{Entity}>();
-```
-
-Optionally add seed data method following any existing seed patterns in the file.
-
-### Step 5: List ViewModel — `{App}/ViewModels/{Entity}ListViewModel.cs`
-
-```csharp
-using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using {App}.Models;
-using {App}.Services;
-
-namespace {App}.ViewModels;
-
 public partial class {Entity}ListViewModel : ObservableObject
 {
     private readonly I{Entity}Repository _{entity}Repository;
+    private readonly IMapper _mapper;
+    public {Entity}ListViewModel(I{Entity}Repository repo, IMapper mapper)
+    { _{entity}Repository = repo; _mapper = mapper; }
 
-    public {Entity}ListViewModel(I{Entity}Repository {entity}Repository)
-    {
-        _{entity}Repository = {entity}Repository;
-    }
-
-    [ObservableProperty]
-    private ObservableCollection<{Entity}> _items = [];
-
-    [ObservableProperty]
-    private bool _isLoading;
-
-    [ObservableProperty]
-    private bool _isEmpty;
+    [ObservableProperty] private ObservableCollection<{Entity}Info> _items = [];
+    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isEmpty;
 
     [RelayCommand]
     private async Task LoadItemsAsync()
@@ -215,269 +309,161 @@ public partial class {Entity}ListViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var list = await _{entity}Repository.GetAllAsync();
-            Items = new ObservableCollection<{Entity}>(list);
+            var models = await _{entity}Repository.GetAllAsync();
+            Items = new(_mapper.Map<List<{Entity}Info>>(models));
             IsEmpty = Items.Count == 0;
         }
-        finally
-        {
-            IsLoading = false;
-        }
+        finally { IsLoading = false; }
     }
 
     [RelayCommand]
-    private async Task GoToDetailAsync({Entity} item)
+    private async Task DeleteAsync({Entity}Info item)
     {
-        var parameters = new Dictionary<string, object> { { "{Entity}", item } };
-        await Shell.Current.GoToAsync("{Entity}DetailPage", parameters);
+        if (!await Shell.Current.DisplayAlert("Delete", $"Delete \"{item.Name}\"?", "Yes", "No")) return;
+        await _{entity}Repository.DeleteAsync(item.Id); Items.Remove(item); IsEmpty = Items.Count == 0;
     }
 
     [RelayCommand]
-    private async Task DeleteAsync({Entity} item)
-    {
-        bool confirm = await Shell.Current.DisplayAlert(
-            "Delete", $"Delete \"{item.Name}\"?", "Yes", "No");
-
-        if (!confirm) return;
-
-        await _{entity}Repository.DeleteAsync(item.Id);
-        Items.Remove(item);
-        IsEmpty = Items.Count == 0;
-    }
+    private async Task GoToDetailAsync({Entity}Info item) =>
+        await Shell.Current.GoToAsync("{Entity}DetailPage", new Dictionary<string, object> { { "{Entity}Info", item } });
 }
 ```
 
-### Step 6: Detail ViewModel — `{App}/ViewModels/{Entity}DetailViewModel.cs`
+### Step 11: Detail ViewModel — `{App}/ViewModels/{Entity}DetailViewModel.cs`
 
 ```csharp
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using {App}.Models;
-using {App}.Services;
-
-namespace {App}.ViewModels;
-
 public partial class {Entity}DetailViewModel : ObservableObject, IQueryAttributable
 {
     private readonly I{Entity}Repository _{entity}Repository;
+    private readonly IMapper _mapper;
+    public {Entity}DetailViewModel(I{Entity}Repository repo, IMapper mapper)
+    { _{entity}Repository = repo; _mapper = mapper; }
 
-    public {Entity}DetailViewModel(I{Entity}Repository {entity}Repository)
-    {
-        _{entity}Repository = {entity}Repository;
-    }
-
-    [ObservableProperty]
-    private int _{entity}Id;
-
-    [ObservableProperty]
-    private string _name = string.Empty;
-
-    [ObservableProperty]
-    private bool _isSaving;
-
-    [ObservableProperty]
-    private bool _isNewItem = true;
-
-    [ObservableProperty]
-    private string _pageTitle = "New {Entity}";
+    [ObservableProperty] private int _{entity}Id;
+    [ObservableProperty] private string _name = string.Empty;
+    [ObservableProperty] private bool _isSaving;
+    [ObservableProperty] private bool _isNewItem = true;
+    [ObservableProperty] private string _pageTitle = "New {Entity}";
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("{Entity}", out var obj) && obj is {Entity} item)
-        {
-            {Entity}Id = item.Id;
-            Name = item.Name;
-            IsNewItem = false;
-            PageTitle = "Edit {Entity}";
-        }
+        if (query.TryGetValue("{Entity}Info", out var obj) && obj is {Entity}Info info)
+        { {Entity}Id = info.Id; Name = info.Name; IsNewItem = false; PageTitle = "Edit {Entity}"; }
     }
 
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (string.IsNullOrWhiteSpace(Name))
-        {
-            await Shell.Current.DisplayAlert("Error", "Name is required.", "OK");
-            return;
-        }
-
         IsSaving = true;
         try
         {
-            var entity = new {Entity}
-            {
-                Id = {Entity}Id,
-                Name = Name
-            };
-
+            var entity = IsNewItem ? {Entity}.Create(Name) : (await _{entity}Repository.GetByIdAsync({Entity}Id))!;
+            if (!IsNewItem) entity.Update(Name);
+            var error = entity.Validate();
+            if (error != null) { await Shell.Current.DisplayAlert("Error", error, "OK"); return; }
             await _{entity}Repository.SaveAsync(entity);
             await Shell.Current.GoToAsync("..");
         }
-        finally
-        {
-            IsSaving = false;
-        }
+        catch (InvalidOperationException ex) { await Shell.Current.DisplayAlert("Error", ex.Message, "OK"); }
+        finally { IsSaving = false; }
     }
 
-    [RelayCommand]
-    private async Task GoBackAsync()
-    {
-        await Shell.Current.GoToAsync("..");
-    }
+    [RelayCommand] private async Task GoBackAsync() => await Shell.Current.GoToAsync("..");
 }
 ```
 
-**ViewModel conventions:**
-- `[ObservableProperty]` on private `_camelCase` fields → generates public `PascalCase` property
-- `[RelayCommand]` on private `{Method}Async` → generates public `{Method}Command`
-- `ObservableCollection<T>` for list bindings
-- Navigation via `Shell.Current.GoToAsync()` with `Dictionary<string, object>` parameters
-- `IQueryAttributable` to receive navigation parameters
-- `DisplayAlert` for confirmations and errors
-- Load data in commands, never in constructor
+**ViewModel conventions:** ViewModels bind to **`{Entity}Info`** (DTO), not Models · `IMapper` injected for conversions · Navigation passes DTOs · Save/Update still goes through domain entity methods (Create/Update/Validate) for business rules · `[ObservableProperty]` on `_camelCase` · `[RelayCommand]` on `{Method}Async`
 
-### Step 7: List Page XAML — `{App}/Pages/{Entity}ListPage.xaml`
+### Step 12: List Page XAML — `{App}/Pages/{Entity}ListPage.xaml`
 
 ```xml
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:{App}.ViewModels"
-             xmlns:models="clr-namespace:{App}.Models;assembly={App}.Domain"
+             xmlns:dto="clr-namespace:{App}.DTOs;assembly={App}.DTO"
              x:Class="{App}.Pages.{Entity}ListPage"
              x:DataType="vm:{Entity}ListViewModel"
              Title="{Entities}">
-
     <Grid RowDefinitions="*,Auto" Padding="16">
-
-        <!-- Loading -->
-        <ActivityIndicator Grid.Row="0"
-                           IsRunning="{Binding IsLoading}"
-                           IsVisible="{Binding IsLoading}"
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
                            HorizontalOptions="Center" VerticalOptions="Center" />
-
-        <!-- Empty State -->
-        <VerticalStackLayout Grid.Row="0" IsVisible="{Binding IsEmpty}"
-                             VerticalOptions="Center" HorizontalOptions="Center" Spacing="12">
-            <Label Text="No items yet" FontSize="18" FontAttributes="Bold"
-                   HorizontalOptions="Center" />
-        </VerticalStackLayout>
-
-        <!-- List -->
+        <Label Grid.Row="0" Text="No items yet" IsVisible="{Binding IsEmpty}"
+               FontSize="18" HorizontalOptions="Center" VerticalOptions="Center" />
         <CollectionView Grid.Row="0" ItemsSource="{Binding Items}" SelectionMode="None">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:{Entity}">
+                <DataTemplate x:DataType="dto:{Entity}Info">
                     <SwipeView>
-                        <SwipeView.RightItems>
-                            <SwipeItems>
-                                <SwipeItem Text="Delete" BackgroundColor="#E53935"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:{Entity}ListViewModel}}, Path=DeleteCommand}"
-                                    CommandParameter="{Binding}" />
-                            </SwipeItems>
-                        </SwipeView.RightItems>
-
+                        <SwipeView.RightItems><SwipeItems>
+                            <SwipeItem Text="Delete" BackgroundColor="#E53935"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:{Entity}ListViewModel}}, Path=DeleteCommand}"
+                                CommandParameter="{Binding}" />
+                        </SwipeItems></SwipeView.RightItems>
                         <Frame Margin="0,4" Padding="16" CornerRadius="12" BorderColor="Transparent">
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:{Entity}ListViewModel}}, Path=GoToDetailCommand}"
                                     CommandParameter="{Binding}" />
                             </Frame.GestureRecognizers>
-
                             <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
                         </Frame>
                     </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
-        <!-- FAB -->
         <Button Grid.Row="1" Text="+ New" Command="{Binding GoToDetailCommand}"
-                FontSize="16" FontAttributes="Bold" HeightRequest="56"
-                CornerRadius="28" Margin="0,12,0,0" />
+                FontSize="16" HeightRequest="56" CornerRadius="28" Margin="0,12,0,0" />
     </Grid>
 </ContentPage>
 ```
 
-**IMPORTANT — XAML assembly references:**
-- Models in a separate project require the assembly qualifier:
-  `xmlns:models="clr-namespace:{App}.Models;assembly={App}.Domain"`
-- ViewModels in the MAUI project do NOT need an assembly qualifier:
-  `xmlns:vm="clr-namespace:{App}.ViewModels"`
-- If the project is single-project (no Domain layer), neither needs an assembly qualifier.
+**XAML assembly refs:** DTOs need `assembly={App}.DTO` · ViewModels in MAUI do NOT need assembly qualifier.
 
-### Step 8: Page Code-Behind — `{App}/Pages/{Entity}ListPage.xaml.cs`
+### Step 13: Page Code-Behind — `{App}/Pages/{Entity}ListPage.xaml.cs`
 
 ```csharp
-using {App}.ViewModels;
-
-namespace {App}.Pages;
-
 public partial class {Entity}ListPage : ContentPage
 {
     private readonly {Entity}ListViewModel _viewModel;
-
     public {Entity}ListPage({Entity}ListViewModel viewModel)
-    {
-        InitializeComponent();
-        BindingContext = _viewModel = viewModel;
-    }
+    { InitializeComponent(); BindingContext = _viewModel = viewModel; }
 
     protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-        await _viewModel.LoadItemsCommand.ExecuteAsync(null);
-    }
+    { base.OnAppearing(); await _viewModel.LoadItemsCommand.ExecuteAsync(null); }
 }
 ```
 
-**Page conventions:**
-- Inject ViewModel via constructor (DI)
-- Set `BindingContext` in constructor
-- Load/refresh data in `OnAppearing` via command execution
-- Same pattern for Detail pages (inject Detail ViewModel)
-
-### Step 9: DI Registration — Modify `{App}/MauiProgram.cs`
-
-Add entries in the appropriate sections:
+### Step 14: DI Registration — `{App}/MauiProgram.cs`
 
 ```csharp
-// Repository
-builder.Services.AddSingleton<I{Entity}Repository, {Entity}Repository>();
+// AutoMapper — scans Infra assembly for all Profiles
+builder.Services.AddAutoMapper(typeof(AppDatabase).Assembly);
 
-// ViewModels
-builder.Services.AddTransient<{Entity}ListViewModel>();
+// Application Services (Domain Services — registered via Application project)
+builder.Services.AddApplicationServices();
+
+builder.Services.AddSingleton<I{Entity}AppService, {Entity}AppService>();      // AppService (if needed)
+builder.Services.AddSingleton<I{Entity}Repository, {Entity}Repository>();      // Repository
+builder.Services.AddTransient<{Entity}ListViewModel>();                        // ViewModels
 builder.Services.AddTransient<{Entity}DetailViewModel>();
-
-// Pages
-builder.Services.AddTransient<{Entity}ListPage>();
+builder.Services.AddTransient<{Entity}ListPage>();                             // Pages
 builder.Services.AddTransient<{Entity}DetailPage>();
 ```
 
-**Convention:** Repositories and Services as `Singleton` (single DB connection), ViewModels and Pages as `Transient` (fresh state per navigation).
+**Key points:**
+- `AddApplicationServices()` comes from `{App}.Application` project — registers all Domain Services in one call
+- Domain Services are NOT registered individually in `MauiProgram.cs` — they go in `DependencyInjection.cs`
+- Repos, AppServices, ViewModels, and Pages are still registered directly in `MauiProgram.cs`
+- **Singleton** for repos/services/appservices · **Transient** for ViewModels/Pages · AutoMapper registered **once**, scans assembly for all Profiles
 
-### Step 10: Shell Navigation — Modify `AppShell`
+### Step 15: Shell Navigation — `AppShell`
 
-**In `AppShell.xaml`** — add tab or shell content:
-```xml
-<ShellContent Title="{Entities}"
-              ContentTemplate="{DataTemplate pages:{Entity}ListPage}"
-              Route="{Entity}ListPage" />
-```
+In `.xaml`: `<ShellContent Title="{Entities}" ContentTemplate="{DataTemplate pages:{Entity}ListPage}" Route="{Entity}ListPage" />`
 
-**In `AppShell.xaml.cs`** — register routes for pages navigated to programmatically:
-```csharp
-Routing.RegisterRoute("{Entity}DetailPage", typeof({Entity}DetailPage));
-```
+In `.xaml.cs`: `Routing.RegisterRoute("{Entity}DetailPage", typeof({Entity}DetailPage));`
 
-### Step 11: Unit Tests — `{App}.Tests/Services/{Entity}RepositoryTests.cs`
+### Step 16: Unit Tests — `{App}.Tests/Services/{Entity}RepositoryTests.cs`
 
 ```csharp
-using {App}.Data;
-using {App}.Models;
-using {App}.Services;
-
-namespace {App}.Tests.Services;
-
 public class {Entity}RepositoryTests : IAsyncLifetime
 {
     private AppDatabase _database = null!;
@@ -487,112 +473,65 @@ public class {Entity}RepositoryTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.db3");
-        _database = new AppDatabase(_dbPath);
-        await _database.InitializeAsync();
+        _database = new AppDatabase(_dbPath); await _database.InitializeAsync();
         _repository = new {Entity}Repository(_database);
     }
+    public Task DisposeAsync() { if (File.Exists(_dbPath)) File.Delete(_dbPath); return Task.CompletedTask; }
 
-    public Task DisposeAsync()
+    [Fact] public async Task SaveAsync_Insert() { Assert.Equal(1, await _repository.SaveAsync({Entity}.Create("Test"))); }
+    [Fact] public async Task GetAllAsync() { /* save 2, assert count == 2 */ }
+    [Fact] public async Task SaveAsync_Update() { /* save, Update(), save again, assert new value */ }
+    [Fact] public async Task DeleteAsync() { /* save, delete, get returns null */ }
+
+    // Domain logic tests (no DB needed)
+    [Fact] public void Validate_EmptyName_ReturnsError() => Assert.NotNull(new {Entity} { Name = "" }.Validate());
+    [Fact] public void Create_Valid() => Assert.Equal("Ok", {Entity}.Create("Ok").Name);
+    [Fact] public void Create_Invalid_Throws() => Assert.Throws<InvalidOperationException>(() => {Entity}.Create(""));
+
+    // Mapper tests
+    [Fact] public void MapModelToInfo()
     {
-        if (File.Exists(_dbPath))
-            File.Delete(_dbPath);
-        return Task.CompletedTask;
-    }
-
-    [Fact]
-    public async Task SaveAsync_NewEntity_InsertsSuccessfully()
-    {
-        var entity = new {Entity} { Name = "Test" };
-        var result = await _repository.SaveAsync(entity);
-        Assert.Equal(1, result);
-    }
-
-    [Fact]
-    public async Task GetAllAsync_ReturnsAllEntities()
-    {
-        await _repository.SaveAsync(new {Entity} { Name = "A" });
-        await _repository.SaveAsync(new {Entity} { Name = "B" });
-
-        var all = await _repository.GetAllAsync();
-        Assert.Equal(2, all.Count);
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_ExistingEntity_ReturnsEntity()
-    {
-        var entity = new {Entity} { Name = "Find Me" };
-        await _repository.SaveAsync(entity);
-
-        var found = await _repository.GetByIdAsync(entity.Id);
-        Assert.NotNull(found);
-        Assert.Equal("Find Me", found!.Name);
-    }
-
-    [Fact]
-    public async Task SaveAsync_ExistingEntity_Updates()
-    {
-        var entity = new {Entity} { Name = "Original" };
-        await _repository.SaveAsync(entity);
-
-        entity.Name = "Updated";
-        await _repository.SaveAsync(entity);
-
-        var updated = await _repository.GetByIdAsync(entity.Id);
-        Assert.Equal("Updated", updated!.Name);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_RemovesEntity()
-    {
-        var entity = new {Entity} { Name = "ToDelete" };
-        await _repository.SaveAsync(entity);
-
-        await _repository.DeleteAsync(entity.Id);
-
-        var result = await _repository.GetByIdAsync(entity.Id);
-        Assert.Null(result);
+        var config = new MapperConfiguration(cfg => cfg.AddProfile<{Entity}Profile>());
+        var mapper = config.CreateMapper();
+        var model = {Entity}.Create("Test");
+        var info = mapper.Map<{Entity}Info>(model);
+        Assert.Equal(model.Name, info.Name);
     }
 }
 ```
-
-**Test conventions:**
-- xUnit + `IAsyncLifetime` for async setup/teardown
-- Temporary SQLite DB per test class (unique path via `Guid.NewGuid()`)
-- Clean up DB file in `DisposeAsync`
-- Test each CRUD operation independently
-- Use Moq for service/ViewModel tests when needed
 
 ---
 
 ## Checklist
 
-| # | Layer | Action | File |
-|---|-------|--------|------|
-| 1 | Domain | Create | `{App}.Domain/Models/{Entity}.cs` |
-| 2 | Infra.Interfaces | Create | `{App}.Infra.Interfaces/Services/I{Entity}Repository.cs` |
-| 3 | Infra | Create | `{App}.Infra/Services/{Entity}Repository.cs` |
-| 4 | Infra | Modify | `{App}.Infra/Context/AppDatabase.cs` (add `CreateTableAsync`) |
-| 5 | MAUI | Create | `{App}/ViewModels/{Entity}ListViewModel.cs` |
-| 6 | MAUI | Create | `{App}/ViewModels/{Entity}DetailViewModel.cs` |
-| 7 | MAUI | Create | `{App}/Pages/{Entity}ListPage.xaml` |
-| 8 | MAUI | Create | `{App}/Pages/{Entity}ListPage.xaml.cs` |
-| 9 | MAUI | Create | `{App}/Pages/{Entity}DetailPage.xaml` |
-| 10 | MAUI | Create | `{App}/Pages/{Entity}DetailPage.xaml.cs` |
-| 11 | MAUI | Modify | `{App}/MauiProgram.cs` (DI registrations) |
-| 12 | MAUI | Modify | `{App}/AppShell.xaml` + `.xaml.cs` (navigation) |
-| 13 | Tests | Create | `{App}.Tests/Services/{Entity}RepositoryTests.cs` |
+| # | Layer | File |
+|---|-------|------|
+| 1 | Domain | `{App}.Domain/Models/{Entity}.cs` (Rich Entity: Validate, Update, Create) |
+| 2 | DTO | `{App}.DTO/DTOs/{Entity}Info.cs` (pure data, "Info" suffix) |
+| 3 | Infra.Interfaces | `{App}.Infra.Interfaces/Services/I{Entity}Repository.cs` |
+| 4 | Domain (if needed) | `{App}.Domain/Services/{Entity}Service.cs` (cross-entity rules) |
+| 5 | Infra.Interfaces (if needed) | `{App}.Infra.Interfaces/Services/I{Entity}AppService.cs` |
+| 6 | Application (if Domain Service) | Modify `{App}.Application/DependencyInjection.cs` → register Domain Service |
+| 7 | Infra (if needed) | `{App}.Infra/AppServices/{Entity}AppService.cs` (external APIs) |
+| 8 | Infra | `{App}.Infra/Mappers/{Entity}Profile.cs` (Model ↔ Info) |
+| 9 | Infra | `{App}.Infra/Services/{Entity}Repository.cs` |
+| 10 | Infra | Modify `AppDatabase.cs` → `CreateTableAsync<{Entity}>()` |
+| 11-12 | MAUI | `ViewModels/{Entity}ListViewModel.cs` + `{Entity}DetailViewModel.cs` |
+| 13-14 | MAUI | `Pages/{Entity}ListPage.xaml(.cs)` + `{Entity}DetailPage.xaml(.cs)` |
+| 15 | MAUI | Modify `MauiProgram.cs` (DI: Repos, AppServices, VMs, Pages + `AddApplicationServices()`) |
+| 16 | MAUI | Modify `AppShell.xaml` + `.xaml.cs` (navigation) |
+| 17 | Tests | `{Entity}RepositoryTests.cs` + domain logic + mapper tests |
 
 ## Response Guidelines
 
-1. **Discover the project first** — run `dotnet sln list`, read existing entities to match patterns
-2. **Follow the order** — Domain → Infra.Interfaces → Infra → MAUI → Tests
-3. **Build after each layer** to catch errors early:
-   - `dotnet build {App}.Domain/{App}.Domain.csproj`
-   - `dotnet build {App}.Infra/{App}.Infra.csproj`
-   - `dotnet build {App}/{App}.csproj`
-   - `dotnet test {App}.Tests/{App}.Tests.csproj`
-4. **XAML assembly references** — use `assembly={App}.Domain` for models in separate projects
-5. **Match the app language** — read existing UI strings and use the same language for new ones
-6. **Match conventions** — SQLite attributes, `[ObservableProperty]`, `[RelayCommand]`, upsert pattern
-7. **Singleton** for repos/services, **Transient** for ViewModels/Pages
-8. **Adapt to project structure** — if single-project (no Domain/Infra split), adjust file paths but keep the same layered patterns
+1. **Discover first** — `dotnet sln list`, read existing entities to match patterns
+2. **Order** — Domain → DTO → Infra.Interfaces → Domain Services → Application (DI) → Infra (Mappers + AppServices + Repos) → MAUI → Tests
+3. **Build after each layer** to catch errors early
+4. **Match the app language** in UI strings
+5. **Rich Domain** — validation in entities, state via methods, creation via factories. NO business rules in repos/ViewModels
+6. **DTOs** — suffix "Info", pure data, no logic. ViewModels/Pages bind to DTOs, never to Models directly
+7. **Mapper** — one Profile per entity in `Infra/Mappers/`. Model → Info (read), Info → Model (write, ignore managed fields)
+8. **Domain Services** — cross-entity rules only, depend on interfaces only
+9. **AppServices** — infrastructure only (external APIs), live in `{App}.Infra/AppServices/`
+10. **Application** — composition root for Domain Services DI. Single `DependencyInjection.cs` file, append new registrations there. Called via `AddApplicationServices()` in `MauiProgram.cs`
+11. **Singleton** for repos/services/appservices · **Transient** for ViewModels/Pages

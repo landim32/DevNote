@@ -4,7 +4,8 @@ using System.Text.Json;
 using Moq;
 using Moq.Protected;
 using VoiceNotesAI.Helpers;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.AppServices;
+using VoiceNotesAI.DTOs;
 
 namespace VoiceNotesAI.Tests.Services;
 
@@ -66,7 +67,7 @@ public class AIServiceTests
             "Tarefas");
 
         var httpClient = CreateMockHttpClient(HttpStatusCode.OK, responseJson);
-        var service = new AIService(httpClient, CreateSettings());
+        var service = new AIAppService(httpClient, CreateSettings());
 
         var result = await service.InterpretNoteAsync("preciso comprar leite");
 
@@ -96,7 +97,7 @@ public class AIServiceTests
             });
 
         var httpClient = new HttpClient(handler.Object);
-        var service = new AIService(httpClient, CreateSettings(apiKey: "my-secret-key"));
+        var service = new AIAppService(httpClient, CreateSettings(apiKey: "my-secret-key"));
 
         await service.InterpretNoteAsync("texto teste");
 
@@ -129,7 +130,7 @@ public class AIServiceTests
             });
 
         var httpClient = new HttpClient(handler.Object);
-        var service = new AIService(httpClient, CreateSettings(model: "gpt-4o-mini"));
+        var service = new AIAppService(httpClient, CreateSettings(model: "gpt-4o-mini"));
 
         await service.InterpretNoteAsync("teste");
 
@@ -141,7 +142,7 @@ public class AIServiceTests
     public async Task InterpretNoteAsync_ApiError_ShouldThrowHttpRequestException()
     {
         var httpClient = CreateMockHttpClient(HttpStatusCode.Unauthorized, "Unauthorized");
-        var service = new AIService(httpClient, CreateSettings(apiKey: "invalid-key"));
+        var service = new AIAppService(httpClient, CreateSettings(apiKey: "invalid-key"));
 
         await Assert.ThrowsAsync<HttpRequestException>(
             () => service.InterpretNoteAsync("texto"));
@@ -165,7 +166,7 @@ public class AIServiceTests
         });
 
         var httpClient = CreateMockHttpClient(HttpStatusCode.OK, responseJson);
-        var service = new AIService(httpClient, CreateSettings());
+        var service = new AIAppService(httpClient, CreateSettings());
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.InterpretNoteAsync("texto"));
@@ -189,7 +190,7 @@ public class AIServiceTests
         });
 
         var httpClient = CreateMockHttpClient(HttpStatusCode.OK, responseJson);
-        var service = new AIService(httpClient, CreateSettings());
+        var service = new AIAppService(httpClient, CreateSettings());
 
         await Assert.ThrowsAsync<JsonException>(
             () => service.InterpretNoteAsync("texto"));
@@ -202,7 +203,7 @@ public class AIServiceTests
         var responseJson = BuildConsolidationResponse(consolidatedText);
 
         var httpClient = CreateMockHttpClient(HttpStatusCode.OK, responseJson);
-        var service = new AIService(httpClient, CreateSettings());
+        var service = new AIAppService(httpClient, CreateSettings());
 
         var result = await service.ConsolidateNoteAsync(
             "Minha nota original",
@@ -215,7 +216,7 @@ public class AIServiceTests
     public async Task ConsolidateNoteAsync_ApiError_ShouldThrowHttpRequestException()
     {
         var httpClient = CreateMockHttpClient(HttpStatusCode.InternalServerError, "Error");
-        var service = new AIService(httpClient, CreateSettings());
+        var service = new AIAppService(httpClient, CreateSettings());
 
         await Assert.ThrowsAsync<HttpRequestException>(
             () => service.ConsolidateNoteAsync("nota", new List<string> { "comment" }));
@@ -239,7 +240,7 @@ public class AIServiceTests
         });
 
         var httpClient = CreateMockHttpClient(HttpStatusCode.OK, responseJson);
-        var service = new AIService(httpClient, CreateSettings());
+        var service = new AIAppService(httpClient, CreateSettings());
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.ConsolidateNoteAsync("nota", new List<string> { "comment" }));

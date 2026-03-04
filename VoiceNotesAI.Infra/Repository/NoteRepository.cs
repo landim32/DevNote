@@ -1,43 +1,48 @@
+using AutoMapper;
 using VoiceNotesAI.Context;
+using VoiceNotesAI.DTOs;
 using VoiceNotesAI.Models;
 
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.Repository;
 
 public class NoteRepository : INoteRepository
 {
     private readonly AppDatabase _database;
+    private readonly IMapper _mapper;
 
-    public NoteRepository(AppDatabase database)
+    public NoteRepository(AppDatabase database, IMapper mapper)
     {
         _database = database;
+        _mapper = mapper;
     }
 
-    public async Task<List<Note>> GetAllAsync()
+    public async Task<List<NoteInfo>> GetAllAsync()
     {
-        return await _database.Connection
+        var notes = await _database.Connection
             .Table<Note>()
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
+        return _mapper.Map<List<NoteInfo>>(notes);
     }
 
-    public async Task<Note?> GetByIdAsync(int id)
+    public async Task<NoteInfo?> GetByIdAsync(int id)
     {
-        return await _database.Connection
+        var note = await _database.Connection
             .Table<Note>()
             .Where(n => n.Id == id)
             .FirstOrDefaultAsync();
+        return note is null ? null : _mapper.Map<NoteInfo>(note);
     }
 
-    public async Task<int> SaveAsync(Note note)
+    public async Task<int> SaveAsync(NoteInfo noteInfo)
     {
-        note.UpdatedAt = DateTime.UtcNow;
+        var note = _mapper.Map<Note>(noteInfo);
 
         if (note.Id != 0)
         {
             return await _database.Connection.UpdateAsync(note);
         }
 
-        note.CreatedAt = DateTime.UtcNow;
         return await _database.Connection.InsertAsync(note);
     }
 
@@ -46,12 +51,13 @@ public class NoteRepository : INoteRepository
         return await _database.Connection.DeleteAsync<Note>(id);
     }
 
-    public async Task<List<Note>> GetByCategoryAsync(string category)
+    public async Task<List<NoteInfo>> GetByCategoryAsync(string category)
     {
-        return await _database.Connection
+        var notes = await _database.Connection
             .Table<Note>()
             .Where(n => n.Category == category)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
+        return _mapper.Map<List<NoteInfo>>(notes);
     }
 }

@@ -1,20 +1,21 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.AppServices;
+using VoiceNotesAI.Services.Interfaces;
 
 namespace VoiceNotesAI.ViewModels;
 
 public partial class NoteResultViewModel : ObservableObject, IQueryAttributable
 {
-    private readonly INoteRepository _noteRepository;
-    private readonly ICategoryRepository _categoryRepository;
+    private readonly INoteService _noteService;
+    private readonly ICategoryService _categoryService;
 
-    public NoteResultViewModel(INoteRepository noteRepository, ICategoryRepository categoryRepository)
+    public NoteResultViewModel(INoteService noteService, ICategoryService categoryService)
     {
-        _noteRepository = noteRepository;
-        _categoryRepository = categoryRepository;
+        _noteService = noteService;
+        _categoryService = categoryService;
     }
 
     [ObservableProperty]
@@ -57,24 +58,18 @@ public partial class NoteResultViewModel : ObservableObject, IQueryAttributable
     [RelayCommand]
     private async Task LoadCategoriesAsync()
     {
-        var categories = await _categoryRepository.GetAllAsync();
-        AvailableCategories = new ObservableCollection<string>(categories.Select(c => c.Name));
+        var categoryNames = await _categoryService.GetAllNamesAsync();
+        AvailableCategories = new ObservableCollection<string>(categoryNames);
     }
 
     [RelayCommand]
     private async Task SaveNoteAsync()
     {
-        if (string.IsNullOrWhiteSpace(Title))
-        {
-            await Shell.Current.DisplayAlert("Erro", "O título é obrigatório.", "OK");
-            return;
-        }
-
         IsSaving = true;
 
         try
         {
-            var note = new Note
+            var noteInfo = new NoteInfo
             {
                 Title = Title,
                 Description = Description,
@@ -82,8 +77,12 @@ public partial class NoteResultViewModel : ObservableObject, IQueryAttributable
                 AudioFilePath = AudioFilePath
             };
 
-            await _noteRepository.SaveAsync(note);
+            await _noteService.SaveAsync(noteInfo);
             await Shell.Current.GoToAsync("../..");
+        }
+        catch (InvalidOperationException ex)
+        {
+            await Shell.Current.DisplayAlert("Erro", ex.Message, "OK");
         }
         finally
         {

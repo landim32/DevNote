@@ -36,6 +36,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VoiceNotesAI.Domain\VoiceNotesAI.Domain.csproj" />
+    <ProjectReference Include="..\VoiceNotesAI.DTO\VoiceNotesAI.DTO.csproj" />
+    <ProjectReference Include="..\VoiceNotesAI.Application\VoiceNotesAI.Application.csproj" />
     <ProjectReference Include="..\VoiceNotesAI.Infra.Interfaces\VoiceNotesAI.Infra.Interfaces.csproj" />
     <ProjectReference Include="..\VoiceNotesAI.Infra\VoiceNotesAI.Infra.csproj" />
   </ItemGroup>

@@ -1,24 +1,22 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.Services.Interfaces;
 
 namespace VoiceNotesAI.ViewModels;
 
 public partial class NoteListViewModel : ObservableObject
 {
-    private readonly INoteRepository _noteRepository;
-    private readonly ICategoryRepository _categoryRepository;
+    private readonly INoteService _noteService;
 
-    public NoteListViewModel(INoteRepository noteRepository, ICategoryRepository categoryRepository)
+    public NoteListViewModel(INoteService noteService)
     {
-        _noteRepository = noteRepository;
-        _categoryRepository = categoryRepository;
+        _noteService = noteService;
     }
 
     [ObservableProperty]
-    private ObservableCollection<Note> _notes = [];
+    private ObservableCollection<NoteInfo> _notes = [];
 
     [ObservableProperty]
     private ObservableCollection<string> _filterCategories = [];
@@ -57,14 +55,11 @@ public partial class NoteListViewModel : ObservableObject
         {
             await LoadCategoriesAsync();
 
-            List<Note> noteList;
+            var noteList = string.IsNullOrEmpty(SelectedCategory)
+                ? await _noteService.GetAllAsync()
+                : await _noteService.GetByCategoryAsync(SelectedCategory);
 
-            if (string.IsNullOrEmpty(SelectedCategory))
-                noteList = await _noteRepository.GetAllAsync();
-            else
-                noteList = await _noteRepository.GetByCategoryAsync(SelectedCategory);
-
-            Notes = new ObservableCollection<Note>(noteList);
+            Notes = new ObservableCollection<NoteInfo>(noteList);
             IsEmpty = Notes.Count == 0;
         }
         finally
@@ -75,9 +70,9 @@ public partial class NoteListViewModel : ObservableObject
 
     private async Task LoadCategoriesAsync()
     {
-        var categories = await _categoryRepository.GetAllAsync();
+        var categoryNames = await _noteService.GetAllCategoryNamesAsync();
         FilterCategories = new ObservableCollection<string>(
-            new[] { "" }.Concat(categories.Select(c => c.Name))
+            new[] { "" }.Concat(categoryNames)
         );
     }
 
@@ -89,14 +84,14 @@ public partial class NoteListViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task GoToDetailAsync(Note note)
+    private async Task GoToDetailAsync(NoteInfo note)
     {
-        var parameters = new Dictionary<string, object> { { "Note", note } };
+        var parameters = new Dictionary<string, object> { { "NoteInfo", note } };
         await Shell.Current.GoToAsync("NoteDetailPage", parameters);
     }
 
     [RelayCommand]
-    private async Task DeleteNoteAsync(Note note)
+    private async Task DeleteNoteAsync(NoteInfo note)
     {
         bool confirm = await Shell.Current.DisplayAlert(
             "Excluir nota",
@@ -105,7 +100,7 @@ public partial class NoteListViewModel : ObservableObject
 
         if (!confirm) return;
 
-        await _noteRepository.DeleteAsync(note.Id);
+        await _noteService.DeleteAsync(note.Id);
         Notes.Remove(note);
         IsEmpty = Notes.Count == 0;
     }

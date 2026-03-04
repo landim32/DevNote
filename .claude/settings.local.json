@@ -34,7 +34,11 @@
       "WebFetch(domain:dotnet.github.io)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:ejball.com)",
-      "WebFetch(domain:dailystuff.nl)"
+      "WebFetch(domain:dailystuff.nl)",
+      "Bash(xargs grep -l \"class.*Converter\\\\|class.*Mapper\\\\|class.*Profile\")",
+      "Bash(dotnet new:*)",
+      "Bash(python3:*)",
+      "Bash(node:*)"
     ]
   }
 }

@@ -27,33 +27,40 @@ dotnet workload install maui-android
 
 ## Architecture
 
-**MVVM pattern** with CommunityToolkit.Mvvm source generators, dependency injection via `MauiProgram.cs`, and interface-based services. The solution is organized into 4 projects following a layered architecture.
+**MVVM pattern** with CommunityToolkit.Mvvm source generators, dependency injection via `MauiProgram.cs`, and interface-based services. The solution is organized into 6 projects following a layered architecture. **AutoMapper** handles Model↔DTO mapping between Domain entities and DTO classes (Info suffix).
 
 ### Core Flow
-Recording (AudioService) → Transcription (SpeechToTextService → Whisper API) → Interpretation (AIService → GPT-4) → Storage (NoteRepository → SQLite)
+Recording (AudioService) → Transcription (SpeechToTextService → Whisper API) → Interpretation (AIService → GPT-4) → Storage (NoteService → NoteRepository → SQLite)
+
+### Data Flow
+ViewModels → Services (DTOs) → Repositories (Domain Models) → SQLite
 
 ### Project Structure
 
 ```
-VoiceNotesAI.Domain        (net8.0)  — Models + Helpers (no dependencies)
-VoiceNotesAI.Infra.Interfaces (net8.0)  — Service interfaces (refs Domain)
-VoiceNotesAI.Infra         (net8.0)  — Service implementations + Context (refs Domain + Infra.Interfaces)
-VoiceNotesAI               (MAUI)    — UI layer: Pages, ViewModels, Converters (refs all 3)
-VoiceNotesAI.Tests          (net8.0)  — Unit tests (refs Domain + Infra.Interfaces + Infra)
+VoiceNotesAI.Domain           (net8.0)  — Models + Helpers (no dependencies)
+VoiceNotesAI.DTO              (net8.0)  — DTOs with "Info" suffix (no dependencies)
+VoiceNotesAI.Infra.Interfaces (net8.0)  — Repository + AppService interfaces (refs Domain + DTO)
+VoiceNotesAI.Application      (net8.0)  — Service interfaces + implementations, DI config (refs Domain + DTO + Infra.Interfaces)
+VoiceNotesAI.Infra            (net8.0)  — Repository + AppService implementations, Context, AutoMapper Profiles (refs Domain + DTO + Infra.Interfaces)
+VoiceNotesAI                  (MAUI)    — UI layer: Pages, ViewModels, Converters (refs all 5)
+VoiceNotesAI.Tests            (net8.0)  — Unit tests (refs Domain + DTO + Application + Infra.Interfaces + Infra)
 ```
 
 All projects use `<RootNamespace>VoiceNotesAI</RootNamespace>` to share namespaces.
 
 ### Key Layers
 
-- **VoiceNotesAI.Domain** — `Note`, `NoteResult`, `Category`, `Comment`, `AppSetting` (SQLite entities/DTOs); `OpenAISettings`, `PromptTemplates` (helpers).
-- **VoiceNotesAI.Infra.Interfaces** — Service interfaces (`IAIService`, `IAudioService`, `ISpeechToTextService`, `INoteRepository`, `ICategoryRepository`, `ICommentRepository`, `ISettingsRepository`).
-- **VoiceNotesAI.Infra** — `AppDatabase` (SQLite wrapper), repository implementations, `AIService`, `SpeechToTextService`.
-- **VoiceNotesAI (MAUI)** — `AudioService` (only service that stays here, depends on Plugin.Maui.Audio), ViewModels (`[ObservableProperty]`/`[RelayCommand]`), Pages (XAML + Shell navigation), Converters.
+- **VoiceNotesAI.Domain** — `Note`, `NoteResult`, `Category`, `Comment`, `AppSetting` (SQLite entities); `OpenAISettings`, `PromptTemplates` (helpers).
+- **VoiceNotesAI.DTO** — `NoteInfo`, `CategoryInfo`, `CommentInfo` (pure data classes, "Info" suffix convention).
+- **VoiceNotesAI.Infra.Interfaces** — Repository interfaces (`INoteRepository`, `ICategoryRepository`, `ICommentRepository`, `ISettingsRepository`), AppService interfaces (`IAIService`, `IAudioService`, `ISpeechToTextService`).
+- **VoiceNotesAI.Application** — Service interfaces (`INoteService`, `ICategoryService`, `ICommentService`, `ISettingService`), Service implementations (`NoteService`, `CategoryService`, `CommentService`, `SettingService`), DI configuration (`DependencyInjection.AddApplicationServices()`).
+- **VoiceNotesAI.Infra** — `AppDatabase` (SQLite wrapper), Repository implementations (`Repository/`), AppService implementations (`AppServices/`: `AIService`, `SpeechToTextService`), AutoMapper profiles (`Mappers/`).
+- **VoiceNotesAI (MAUI)** — `AudioService` (only service that stays here, depends on Plugin.Maui.Audio), ViewModels (use DTOs via Service interfaces), Pages (XAML + Shell navigation), Converters.
 
 ### DI Registration (MauiProgram.cs)
-- **Singleton:** `OpenAISettings`, `AppDatabase`, `HttpClient`, `AudioManager`
-- **Transient:** All Pages, ViewModels, and Services
+- **Singleton:** `OpenAISettings`, `AppDatabase`, `HttpClient`, `AudioManager`, all Services, Repositories, and AppServices
+- **Transient:** All Pages and ViewModels
 
 ## Configuration
 

@@ -1,17 +1,17 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.Services.Interfaces;
 
 namespace VoiceNotesAI.ViewModels;
 
 public partial class CategoryDetailViewModel : ObservableObject, IQueryAttributable
 {
-    private readonly ICategoryRepository _categoryRepository;
+    private readonly ICategoryService _categoryService;
 
-    public CategoryDetailViewModel(ICategoryRepository categoryRepository)
+    public CategoryDetailViewModel(ICategoryService categoryService)
     {
-        _categoryRepository = categoryRepository;
+        _categoryService = categoryService;
     }
 
     [ObservableProperty]
@@ -25,7 +25,7 @@ public partial class CategoryDetailViewModel : ObservableObject, IQueryAttributa
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("Category", out var categoryObj) && categoryObj is Category category)
+        if (query.TryGetValue("CategoryInfo", out var categoryObj) && categoryObj is CategoryInfo category)
         {
             CategoryId = category.Id;
             Name = category.Name;
@@ -35,24 +35,22 @@ public partial class CategoryDetailViewModel : ObservableObject, IQueryAttributa
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (string.IsNullOrWhiteSpace(Name))
-        {
-            await Shell.Current.DisplayAlert("Erro", "O nome da categoria é obrigatório.", "OK");
-            return;
-        }
-
         IsSaving = true;
 
         try
         {
-            var category = new Category
+            var categoryInfo = new CategoryInfo
             {
                 Id = CategoryId,
-                Name = Name.Trim()
+                Name = Name
             };
 
-            await _categoryRepository.SaveAsync(category);
+            await _categoryService.SaveAsync(categoryInfo);
             await Shell.Current.GoToAsync("..");
+        }
+        catch (InvalidOperationException ex)
+        {
+            await Shell.Current.DisplayAlert("Erro", ex.Message, "OK");
         }
         finally
         {
@@ -72,7 +70,7 @@ public partial class CategoryDetailViewModel : ObservableObject, IQueryAttributa
 
         if (!confirm) return;
 
-        await _categoryRepository.DeleteAsync(CategoryId);
+        await _categoryService.DeleteAsync(CategoryId);
         await Shell.Current.GoToAsync("..");
     }
 

@@ -2,22 +2,22 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VoiceNotesAI.Helpers;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.Services.Interfaces;
 
 namespace VoiceNotesAI.ViewModels;
 
 public partial class SettingsViewModel : ObservableObject
 {
-    private readonly ISettingsRepository _settingsRepository;
+    private readonly ISettingService _settingService;
     private readonly OpenAISettings _openAISettings;
 
     public const string ApiKeySettingKey = "OpenAI_ApiKey";
     public const string WhisperModelSettingKey = "OpenAI_WhisperModel";
     public const string GptModelSettingKey = "OpenAI_Model";
 
-    public SettingsViewModel(ISettingsRepository settingsRepository, OpenAISettings openAISettings)
+    public SettingsViewModel(ISettingService settingService, OpenAISettings openAISettings)
     {
-        _settingsRepository = settingsRepository;
+        _settingService = settingService;
         _openAISettings = openAISettings;
     }
 
@@ -61,9 +61,9 @@ public partial class SettingsViewModel : ObservableObject
 
         try
         {
-            ApiKey = await _settingsRepository.GetAsync(ApiKeySettingKey) ?? _openAISettings.ApiKey;
-            WhisperModel = await _settingsRepository.GetAsync(WhisperModelSettingKey) ?? _openAISettings.WhisperModel;
-            GptModel = await _settingsRepository.GetAsync(GptModelSettingKey) ?? _openAISettings.Model;
+            ApiKey = await _settingService.GetAsync(ApiKeySettingKey) ?? _openAISettings.ApiKey;
+            WhisperModel = await _settingService.GetAsync(WhisperModelSettingKey) ?? _openAISettings.WhisperModel;
+            GptModel = await _settingService.GetAsync(GptModelSettingKey) ?? _openAISettings.Model;
         }
         finally
         {
@@ -84,9 +84,9 @@ public partial class SettingsViewModel : ObservableObject
 
         try
         {
-            await _settingsRepository.SetAsync(ApiKeySettingKey, ApiKey.Trim());
-            await _settingsRepository.SetAsync(WhisperModelSettingKey, WhisperModel.Trim());
-            await _settingsRepository.SetAsync(GptModelSettingKey, GptModel.Trim());
+            await _settingService.SetAsync(ApiKeySettingKey, ApiKey.Trim());
+            await _settingService.SetAsync(WhisperModelSettingKey, WhisperModel.Trim());
+            await _settingService.SetAsync(GptModelSettingKey, GptModel.Trim());
 
             // Update the in-memory settings so services pick up changes
             _openAISettings.ApiKey = ApiKey.Trim();

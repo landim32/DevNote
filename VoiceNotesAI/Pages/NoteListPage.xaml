@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:VoiceNotesAI.ViewModels"
-             xmlns:models="clr-namespace:VoiceNotesAI.Models;assembly=VoiceNotesAI.Domain"
+             xmlns:dto="clr-namespace:VoiceNotesAI.DTOs;assembly=VoiceNotesAI.DTO"
              x:Class="VoiceNotesAI.Pages.NoteListPage"
              x:DataType="vm:NoteListViewModel"
              Title="Notas"
@@ -60,7 +60,7 @@
                             IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
                             SelectionMode="None">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Note">
+                    <DataTemplate x:DataType="dto:NoteInfo">
                         <SwipeView>
                             <SwipeView.RightItems>
                                 <SwipeItems>

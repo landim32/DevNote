@@ -1,4 +1,4 @@
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.Repository;
 
 public interface ISettingsRepository
 {

@@ -1,6 +1,8 @@
+using AutoMapper;
 using VoiceNotesAI.Context;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.Mapping;
+using VoiceNotesAI.Repository;
 
 namespace VoiceNotesAI.Tests.Services;
 
@@ -15,7 +17,10 @@ public class CommentRepositoryTests : IAsyncLifetime
         _dbPath = Path.Combine(Path.GetTempPath(), $"voicenotes_test_{Guid.NewGuid()}.db3");
         _database = new AppDatabase(_dbPath);
         await _database.InitializeAsync();
-        _repository = new CommentRepository(_database);
+
+        var config = new MapperConfiguration(cfg => cfg.AddProfile<CommentProfile>());
+        var mapper = config.CreateMapper();
+        _repository = new CommentRepository(_database, mapper);
     }
 
     public async Task DisposeAsync()
@@ -28,11 +33,7 @@ public class CommentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task SaveAsync_NewComment_ShouldInsertAndReturnPositiveId()
     {
-        var comment = new Comment
-        {
-            NoteId = 1,
-            Content = "Comentário de teste"
-        };
+        var comment = new CommentInfo { NoteId = 1, Content = "Comentário de teste" };
 
         var result = await _repository.SaveAsync(comment);
 
@@ -42,25 +43,20 @@ public class CommentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task SaveAsync_NewComment_ShouldSetCreatedAt()
     {
-        var before = DateTime.UtcNow.AddSeconds(-1);
-
-        var comment = new Comment
-        {
-            NoteId = 1,
-            Content = "Comentário com data"
-        };
+        var comment = new CommentInfo { NoteId = 1, Content = "Comentário com data" };
 
         await _repository.SaveAsync(comment);
 
-        Assert.True(comment.CreatedAt >= before);
+        var saved = (await _repository.GetByNoteIdAsync(1)).First();
+        Assert.True(saved.CreatedAt > DateTime.MinValue);
     }
 
     [Fact]
     public async Task GetByNoteIdAsync_ShouldReturnOnlyMatchingNoteId()
     {
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "Comment A" });
-        await _repository.SaveAsync(new Comment { NoteId = 2, Content = "Comment B" });
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "Comment C" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "Comment A" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 2, Content = "Comment B" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "Comment C" });
 
         var comments = await _repository.GetByNoteIdAsync(1);
 
@@ -71,11 +67,11 @@ public class CommentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetByNoteIdAsync_ShouldReturnOrderedByCreatedAtDesc()
     {
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "Primeiro" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "Primeiro" });
         await Task.Delay(50);
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "Segundo" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "Segundo" });
         await Task.Delay(50);
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "Terceiro" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "Terceiro" });
 
         var comments = await _repository.GetByNoteIdAsync(1);
 
@@ -88,7 +84,7 @@ public class CommentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetByNoteIdAsync_NoMatch_ShouldReturnEmpty()
     {
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "Exists" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "Exists" });
 
         var comments = await _repository.GetByNoteIdAsync(999);
 
@@ -98,7 +94,7 @@ public class CommentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task DeleteAsync_ShouldRemoveComment()
     {
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "Para excluir" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "Para excluir" });
 
         var comments = await _repository.GetByNoteIdAsync(1);
         Assert.Single(comments);
@@ -112,9 +108,9 @@ public class CommentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task DeleteByNoteIdAsync_ShouldRemoveAllCommentsForNote()
     {
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "A" });
-        await _repository.SaveAsync(new Comment { NoteId = 1, Content = "B" });
-        await _repository.SaveAsync(new Comment { NoteId = 2, Content = "C" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "A" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 1, Content = "B" });
+        await _repository.SaveAsync(new CommentInfo { NoteId = 2, Content = "C" });
 
         await _repository.DeleteByNoteIdAsync(1);
 

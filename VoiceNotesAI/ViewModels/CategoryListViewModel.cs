@@ -1,22 +1,22 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.Services.Interfaces;
 
 namespace VoiceNotesAI.ViewModels;
 
 public partial class CategoryListViewModel : ObservableObject
 {
-    private readonly ICategoryRepository _categoryRepository;
+    private readonly ICategoryService _categoryService;
 
-    public CategoryListViewModel(ICategoryRepository categoryRepository)
+    public CategoryListViewModel(ICategoryService categoryService)
     {
-        _categoryRepository = categoryRepository;
+        _categoryService = categoryService;
     }
 
     [ObservableProperty]
-    private ObservableCollection<Category> _categories = [];
+    private ObservableCollection<CategoryInfo> _categories = [];
 
     [ObservableProperty]
     private bool _isLoading;
@@ -31,8 +31,8 @@ public partial class CategoryListViewModel : ObservableObject
 
         try
         {
-            var list = await _categoryRepository.GetAllAsync();
-            Categories = new ObservableCollection<Category>(list);
+            var list = await _categoryService.GetAllAsync();
+            Categories = new ObservableCollection<CategoryInfo>(list);
             IsEmpty = Categories.Count == 0;
         }
         finally
@@ -42,7 +42,7 @@ public partial class CategoryListViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task DeleteAsync(Category category)
+    private async Task DeleteAsync(CategoryInfo category)
     {
         bool confirm = await Shell.Current.DisplayAlert(
             "Excluir categoria",
@@ -51,15 +51,15 @@ public partial class CategoryListViewModel : ObservableObject
 
         if (!confirm) return;
 
-        await _categoryRepository.DeleteAsync(category.Id);
+        await _categoryService.DeleteAsync(category.Id);
         Categories.Remove(category);
         IsEmpty = Categories.Count == 0;
     }
 
     [RelayCommand]
-    private async Task GoToDetailAsync(Category category)
+    private async Task GoToDetailAsync(CategoryInfo category)
     {
-        var parameters = new Dictionary<string, object> { { "Category", category } };
+        var parameters = new Dictionary<string, object> { { "CategoryInfo", category } };
         await Shell.Current.GoToAsync("CategoryDetailPage", parameters);
     }
 

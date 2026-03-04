@@ -1,7 +1,7 @@
 using VoiceNotesAI.Context;
 using VoiceNotesAI.Models;
 
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.Repository;
 
 public class SettingsRepository : ISettingsRepository
 {

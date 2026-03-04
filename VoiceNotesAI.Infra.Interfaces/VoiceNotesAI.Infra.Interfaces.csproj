@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VoiceNotesAI.Domain\VoiceNotesAI.Domain.csproj" />
+    <ProjectReference Include="..\VoiceNotesAI.DTO\VoiceNotesAI.DTO.csproj" />
   </ItemGroup>
 
 </Project>

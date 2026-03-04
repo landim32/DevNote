@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace VoiceNotesAI.Models;
+namespace VoiceNotesAI.DTOs;
 
 public class NoteResult
 {

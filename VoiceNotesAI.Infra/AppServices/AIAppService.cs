@@ -2,18 +2,18 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using VoiceNotesAI.Helpers;
-using VoiceNotesAI.Models;
+using VoiceNotesAI.DTOs;
 
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.AppServices;
 
-public class AIService : IAIService
+public class AIAppService : IAIAppService
 {
     private const string ChatEndpoint = "https://api.openai.com/v1/chat/completions";
 
     private readonly HttpClient _httpClient;
     private readonly OpenAISettings _settings;
 
-    public AIService(HttpClient httpClient, OpenAISettings settings)
+    public AIAppService(HttpClient httpClient, OpenAISettings settings)
     {
         _httpClient = httpClient;
         _settings = settings;

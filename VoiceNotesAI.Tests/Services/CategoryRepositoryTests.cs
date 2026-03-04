@@ -1,6 +1,8 @@
+using AutoMapper;
 using VoiceNotesAI.Context;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.Mapping;
+using VoiceNotesAI.Repository;
 
 namespace VoiceNotesAI.Tests.Services;
 
@@ -15,7 +17,10 @@ public class CategoryRepositoryTests : IAsyncLifetime
         _dbPath = Path.Combine(Path.GetTempPath(), $"voicenotes_cat_test_{Guid.NewGuid()}.db3");
         _database = new AppDatabase(_dbPath);
         await _database.InitializeAsync();
-        _repository = new CategoryRepository(_database);
+
+        var config = new MapperConfiguration(cfg => cfg.AddProfile<CategoryProfile>());
+        var mapper = config.CreateMapper();
+        _repository = new CategoryRepository(_database, mapper);
     }
 
     public async Task DisposeAsync()
@@ -28,7 +33,7 @@ public class CategoryRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task SaveAsync_NewCategory_ShouldInsertAndReturnPositiveId()
     {
-        var category = new Category { Name = "Nova Categoria" };
+        var category = new CategoryInfo { Name = "Nova Categoria" };
 
         var result = await _repository.SaveAsync(category);
 
@@ -38,8 +43,7 @@ public class CategoryRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task SaveAsync_ExistingCategory_ShouldUpdate()
     {
-        var category = new Category { Name = "Original" };
-        await _repository.SaveAsync(category);
+        await _repository.SaveAsync(new CategoryInfo { Name = "Original" });
 
         var saved = (await _repository.GetAllAsync()).First(c => c.Name == "Original");
         saved.Name = "Atualizado";
@@ -54,7 +58,6 @@ public class CategoryRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetAllAsync_ShouldReturnCategories_OrderedByName()
     {
-        // Database already has seeded categories from InitializeAsync
         var categories = await _repository.GetAllAsync();
 
         Assert.True(categories.Count >= 6);
@@ -89,8 +92,7 @@ public class CategoryRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task DeleteAsync_ShouldRemoveCategory()
     {
-        var category = new Category { Name = "Para Excluir" };
-        await _repository.SaveAsync(category);
+        await _repository.SaveAsync(new CategoryInfo { Name = "Para Excluir" });
 
         var all = await _repository.GetAllAsync();
         var toDelete = all.First(c => c.Name == "Para Excluir");

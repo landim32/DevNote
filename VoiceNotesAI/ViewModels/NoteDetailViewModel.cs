@@ -1,34 +1,32 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.AppServices;
+using VoiceNotesAI.Services.Interfaces;
 
 namespace VoiceNotesAI.ViewModels;
 
 public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
 {
-    private readonly INoteRepository _noteRepository;
-    private readonly ICategoryRepository _categoryRepository;
-    private readonly ICommentRepository _commentRepository;
-    private readonly ISettingsRepository _settingsRepository;
-    private readonly IAIService _aiService;
-    private readonly ISpeechToTextService _speechToTextService;
-    private readonly IAudioService _audioService;
+    private readonly INoteService _noteService;
+    private readonly ICommentService _commentService;
+    private readonly ISettingService _settingService;
+    private readonly IAIAppService _aiService;
+    private readonly ISpeechToTextAppService _speechToTextService;
+    private readonly IAudioAppService _audioService;
 
     public NoteDetailViewModel(
-        INoteRepository noteRepository,
-        ICategoryRepository categoryRepository,
-        ICommentRepository commentRepository,
-        ISettingsRepository settingsRepository,
-        IAIService aiService,
-        ISpeechToTextService speechToTextService,
-        IAudioService audioService)
+        INoteService noteService,
+        ICommentService commentService,
+        ISettingService settingService,
+        IAIAppService aiService,
+        ISpeechToTextAppService speechToTextService,
+        IAudioAppService audioService)
     {
-        _noteRepository = noteRepository;
-        _categoryRepository = categoryRepository;
-        _commentRepository = commentRepository;
-        _settingsRepository = settingsRepository;
+        _noteService = noteService;
+        _commentService = commentService;
+        _settingService = settingService;
         _aiService = aiService;
         _speechToTextService = speechToTextService;
         _audioService = audioService;
@@ -65,7 +63,7 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     private ObservableCollection<string> _availableCategories = [];
 
     [ObservableProperty]
-    private ObservableCollection<Comment> _comments = [];
+    private ObservableCollection<CommentInfo> _comments = [];
 
     [ObservableProperty]
     private bool _isFabMenuOpen;
@@ -84,7 +82,7 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("Note", out var noteObj) && noteObj is Note note)
+        if (query.TryGetValue("NoteInfo", out var noteObj) && noteObj is NoteInfo note)
         {
             NoteId = note.Id;
             Title = note.Title;
@@ -100,12 +98,12 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     [RelayCommand]
     private async Task LoadCategoriesAsync()
     {
-        var categories = await _categoryRepository.GetAllAsync();
-        AvailableCategories = new ObservableCollection<string>(categories.Select(c => c.Name));
+        var categoryNames = await _noteService.GetAllCategoryNamesAsync();
+        AvailableCategories = new ObservableCollection<string>(categoryNames);
 
         if (IsNewNote && string.IsNullOrEmpty(Category))
         {
-            var lastCategory = await _settingsRepository.GetAsync("LastSelectedCategory");
+            var lastCategory = await _settingService.GetAsync("LastSelectedCategory");
             if (!string.IsNullOrEmpty(lastCategory) && AvailableCategories.Contains(lastCategory))
             {
                 Category = lastCategory;
@@ -118,50 +116,40 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     {
         if (NoteId > 0)
         {
-            var comments = await _commentRepository.GetByNoteIdAsync(NoteId);
-            Comments = new ObservableCollection<Comment>(comments);
+            var comments = await _commentService.GetByNoteIdAsync(NoteId);
+            Comments = new ObservableCollection<CommentInfo>(comments);
         }
     }
 
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (string.IsNullOrWhiteSpace(Description))
-        {
-            await Shell.Current.DisplayAlert("Erro", "O conteúdo da nota é obrigatório.", "OK");
-            return;
-        }
-
         IsSaving = true;
 
         try
         {
-            var title = Title;
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                title = Description.Length > 80
-                    ? Description[..80] + "..."
-                    : Description;
-            }
-
-            var note = new Note
+            var noteInfo = new NoteInfo
             {
                 Id = NoteId,
-                Title = title,
+                Title = Title,
                 Description = Description,
                 Category = Category,
-                AudioFilePath = AudioFilePath,
-                CreatedAt = IsNewNote ? DateTime.Now : CreatedAt
+                AudioFilePath = AudioFilePath
             };
 
-            await _noteRepository.SaveAsync(note);
+            var saved = await _noteService.SaveAsync(noteInfo);
+            NoteId = saved.Id;
 
             if (!string.IsNullOrEmpty(Category))
             {
-                await _settingsRepository.SetAsync("LastSelectedCategory", Category);
+                await _settingService.SetAsync("LastSelectedCategory", Category);
             }
 
             await Shell.Current.GoToAsync("..");
+        }
+        catch (InvalidOperationException ex)
+        {
+            await Shell.Current.DisplayAlert("Erro", ex.Message, "OK");
         }
         finally
         {
@@ -173,25 +161,17 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     {
         if (NoteId == 0)
         {
-            var title = Title;
-            if (string.IsNullOrWhiteSpace(title))
+            var description = string.IsNullOrWhiteSpace(Description) ? "Nova Nota" : Description;
+            var noteInfo = new NoteInfo
             {
-                if (string.IsNullOrWhiteSpace(Description))
-                    title = "Nova Nota";
-                else
-                    title = Description.Length > 80 ? Description[..80] + "..." : Description;
-            }
-
-            var note = new Note
-            {
-                Title = title,
-                Description = Description,
+                Title = Title,
+                Description = description,
                 Category = Category,
                 AudioFilePath = AudioFilePath
             };
 
-            await _noteRepository.SaveAsync(note);
-            NoteId = note.Id;
+            var saved = await _noteService.SaveAsync(noteInfo);
+            NoteId = saved.Id;
             IsNewNote = false;
             PageTitle = "Detalhes da Nota";
         }
@@ -220,13 +200,8 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
 
         await EnsureNoteSavedAsync();
 
-        var comment = new Comment
-        {
-            NoteId = NoteId,
-            Content = text
-        };
-
-        await _commentRepository.SaveAsync(comment);
+        var commentInfo = new CommentInfo { NoteId = NoteId, Content = text };
+        await _commentService.SaveAsync(commentInfo);
         await LoadCommentsAsync();
     }
 
@@ -279,13 +254,8 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
                 return;
             }
 
-            var comment = new Comment
-            {
-                NoteId = NoteId,
-                Content = transcription
-            };
-
-            await _commentRepository.SaveAsync(comment);
+            var commentInfo = new CommentInfo { NoteId = NoteId, Content = transcription };
+            await _commentService.SaveAsync(commentInfo);
             await LoadCommentsAsync();
         }
         catch (Exception ex)
@@ -325,20 +295,18 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
             var consolidated = await _aiService.ConsolidateNoteAsync(Description, commentTexts);
 
             Description = consolidated;
-            await _commentRepository.DeleteByNoteIdAsync(NoteId);
+            await _commentService.DeleteByNoteIdAsync(NoteId);
             Comments.Clear();
 
-            var note = new Note
+            var noteInfo = new NoteInfo
             {
                 Id = NoteId,
                 Title = Title,
                 Description = Description,
                 Category = Category,
-                AudioFilePath = AudioFilePath,
-                CreatedAt = CreatedAt
+                AudioFilePath = AudioFilePath
             };
-
-            await _noteRepository.SaveAsync(note);
+            await _noteService.SaveAsync(noteInfo);
         }
         catch (Exception ex)
         {
@@ -351,9 +319,9 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     }
 
     [RelayCommand]
-    private async Task DeleteCommentAsync(Comment comment)
+    private async Task DeleteCommentAsync(CommentInfo comment)
     {
-        await _commentRepository.DeleteAsync(comment.Id);
+        await _commentService.DeleteAsync(comment.Id);
         Comments.Remove(comment);
     }
 
@@ -367,8 +335,8 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
 
         if (!confirm) return;
 
-        await _commentRepository.DeleteByNoteIdAsync(NoteId);
-        await _noteRepository.DeleteAsync(NoteId);
+        await _commentService.DeleteByNoteIdAsync(NoteId);
+        await _noteService.DeleteAsync(NoteId);
         await Shell.Current.GoToAsync("..");
     }
 

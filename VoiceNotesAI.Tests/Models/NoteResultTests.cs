@@ -1,5 +1,5 @@
 using System.Text.Json;
-using VoiceNotesAI.Models;
+using VoiceNotesAI.DTOs;
 
 namespace VoiceNotesAI.Tests.Models;
 

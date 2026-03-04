@@ -1,20 +1,21 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.AppServices;
+using VoiceNotesAI.Services.Interfaces;
 
 namespace VoiceNotesAI.ViewModels;
 
 public partial class RecordingViewModel : ObservableObject
 {
-    private readonly IAudioService _audioService;
-    private readonly ISpeechToTextService _speechToTextService;
-    private readonly IAIService _aiService;
+    private readonly IAudioAppService _audioService;
+    private readonly ISpeechToTextAppService _speechToTextService;
+    private readonly IAIAppService _aiService;
 
     public RecordingViewModel(
-        IAudioService audioService,
-        ISpeechToTextService speechToTextService,
-        IAIService aiService)
+        IAudioAppService audioService,
+        ISpeechToTextAppService speechToTextService,
+        IAIAppService aiService)
     {
         _audioService = audioService;
         _speechToTextService = speechToTextService;

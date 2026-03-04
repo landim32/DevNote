@@ -1,5 +1,5 @@
 using VoiceNotesAI.Context;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.Repository;
 
 namespace VoiceNotesAI.Tests.Services;
 

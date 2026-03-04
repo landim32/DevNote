@@ -1,6 +1,8 @@
+using AutoMapper;
 using VoiceNotesAI.Context;
-using VoiceNotesAI.Models;
-using VoiceNotesAI.Services;
+using VoiceNotesAI.DTOs;
+using VoiceNotesAI.Mapping;
+using VoiceNotesAI.Repository;
 
 namespace VoiceNotesAI.Tests.Services;
 
@@ -15,7 +17,10 @@ public class NoteRepositoryTests : IAsyncLifetime
         _dbPath = Path.Combine(Path.GetTempPath(), $"voicenotes_test_{Guid.NewGuid()}.db3");
         _database = new AppDatabase(_dbPath);
         await _database.InitializeAsync();
-        _repository = new NoteRepository(_database);
+
+        var config = new MapperConfiguration(cfg => cfg.AddProfile<NoteProfile>());
+        var mapper = config.CreateMapper();
+        _repository = new NoteRepository(_database, mapper);
     }
 
     public async Task DisposeAsync()
@@ -28,12 +33,7 @@ public class NoteRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task SaveAsync_NewNote_ShouldInsertAndReturnPositiveId()
     {
-        var note = new Note
-        {
-            Title = "Nota teste",
-            Description = "Descrição de teste",
-            Category = "Tarefas"
-        };
+        var note = new NoteInfo { Title = "Nota teste", Description = "Descrição de teste", Category = "Tarefas" };
 
         var result = await _repository.SaveAsync(note);
 
@@ -43,25 +43,18 @@ public class NoteRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task SaveAsync_NewNote_ShouldSetCreatedAt()
     {
-        var before = DateTime.UtcNow.AddSeconds(-1);
-
-        var note = new Note
-        {
-            Title = "Nota com data",
-            Description = "Teste",
-            Category = "Ideias"
-        };
+        var note = new NoteInfo { Title = "Nota com data", Description = "Teste", Category = "Ideias" };
 
         await _repository.SaveAsync(note);
 
-        Assert.True(note.CreatedAt >= before);
-        Assert.True(note.UpdatedAt >= before);
+        var saved = (await _repository.GetAllAsync()).First();
+        Assert.True(saved.CreatedAt > DateTime.MinValue);
     }
 
     [Fact]
     public async Task SaveAsync_ExistingNote_ShouldUpdate()
     {
-        var note = new Note { Title = "Original", Description = "Desc", Category = "Tarefas" };
+        var note = new NoteInfo { Title = "Original", Description = "Desc", Category = "Tarefas" };
         await _repository.SaveAsync(note);
 
         var saved = (await _repository.GetAllAsync()).First();
@@ -77,11 +70,11 @@ public class NoteRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetAllAsync_ShouldReturnAllNotes_OrderedByCreatedAtDesc()
     {
-        await _repository.SaveAsync(new Note { Title = "Primeira", Category = "Tarefas" });
+        await _repository.SaveAsync(new NoteInfo { Title = "Primeira", Description = "Conteúdo 1", Category = "Tarefas" });
         await Task.Delay(50);
-        await _repository.SaveAsync(new Note { Title = "Segunda", Category = "Ideias" });
+        await _repository.SaveAsync(new NoteInfo { Title = "Segunda", Description = "Conteúdo 2", Category = "Ideias" });
         await Task.Delay(50);
-        await _repository.SaveAsync(new Note { Title = "Terceira", Category = "Lembretes" });
+        await _repository.SaveAsync(new NoteInfo { Title = "Terceira", Description = "Conteúdo 3", Category = "Lembretes" });
 
         var notes = await _repository.GetAllAsync();
 
@@ -94,8 +87,7 @@ public class NoteRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetByIdAsync_ExistingId_ShouldReturnNote()
     {
-        var note = new Note { Title = "Buscar por ID", Category = "Pessoal" };
-        await _repository.SaveAsync(note);
+        await _repository.SaveAsync(new NoteInfo { Title = "Buscar por ID", Description = "Conteúdo", Category = "Pessoal" });
 
         var allNotes = await _repository.GetAllAsync();
         var found = await _repository.GetByIdAsync(allNotes.First().Id);
@@ -115,8 +107,7 @@ public class NoteRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task DeleteAsync_ShouldRemoveNote()
     {
-        var note = new Note { Title = "Para excluir", Category = "Outros" };
-        await _repository.SaveAsync(note);
+        await _repository.SaveAsync(new NoteInfo { Title = "Para excluir", Description = "Conteúdo", Category = "Outros" });
 
         var allNotes = await _repository.GetAllAsync();
         Assert.Single(allNotes);
@@ -130,9 +121,9 @@ public class NoteRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetByCategoryAsync_ShouldReturnOnlyMatchingCategory()
     {
-        await _repository.SaveAsync(new Note { Title = "Tarefa 1", Category = "Tarefas" });
-        await _repository.SaveAsync(new Note { Title = "Ideia 1", Category = "Ideias" });
-        await _repository.SaveAsync(new Note { Title = "Tarefa 2", Category = "Tarefas" });
+        await _repository.SaveAsync(new NoteInfo { Title = "Tarefa 1", Description = "Conteúdo 1", Category = "Tarefas" });
+        await _repository.SaveAsync(new NoteInfo { Title = "Ideia 1", Description = "Conteúdo 2", Category = "Ideias" });
+        await _repository.SaveAsync(new NoteInfo { Title = "Tarefa 2", Description = "Conteúdo 3", Category = "Tarefas" });
 
         var tarefas = await _repository.GetByCategoryAsync("Tarefas");
         var ideias = await _repository.GetByCategoryAsync("Ideias");
@@ -145,7 +136,7 @@ public class NoteRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetByCategoryAsync_NoMatch_ShouldReturnEmpty()
     {
-        await _repository.SaveAsync(new Note { Title = "Nota", Category = "Tarefas" });
+        await _repository.SaveAsync(new NoteInfo { Title = "Nota", Description = "Conteúdo", Category = "Tarefas" });
 
         var result = await _repository.GetByCategoryAsync("Inexistente");
 

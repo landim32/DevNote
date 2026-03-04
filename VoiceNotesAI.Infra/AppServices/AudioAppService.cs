@@ -1,14 +1,14 @@
 using Plugin.Maui.Audio;
 
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.AppServices;
 
-public class AudioService : IAudioService
+public class AudioAppService : IAudioAppService
 {
     private readonly IAudioManager _audioManager;
     private IAudioRecorder? _recorder;
     private string _currentFilePath = string.Empty;
 
-    public AudioService(IAudioManager audioManager)
+    public AudioAppService(IAudioManager audioManager)
     {
         _audioManager = audioManager;
     }
@@ -18,7 +18,9 @@ public class AudioService : IAudioService
     public async Task<string> StartRecordingAsync()
     {
         var fileName = $"{Guid.NewGuid()}.wav";
-        var audioDir = Path.Combine(FileSystem.AppDataDirectory, "audio");
+        var audioDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "audio");
         Directory.CreateDirectory(audioDir);
         _currentFilePath = Path.Combine(audioDir, fileName);
 

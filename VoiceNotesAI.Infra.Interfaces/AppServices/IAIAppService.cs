@@ -1,8 +1,8 @@
-using VoiceNotesAI.Models;
+using VoiceNotesAI.DTOs;
 
-namespace VoiceNotesAI.Services;
+namespace VoiceNotesAI.AppServices;
 
-public interface IAIService
+public interface IAIAppService
 {
     Task<NoteResult> InterpretNoteAsync(string transcribedText);
     Task<string> ConsolidateNoteAsync(string noteContent, List<string> comments);
