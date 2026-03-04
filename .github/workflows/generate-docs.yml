@@ -34,23 +34,23 @@ jobs:
     - name: Install xmldoc2md
       run: dotnet tool install -g XMLDoc2Markdown
 
-    - name: Build library projects
+    - name: Publish library projects
       run: |
-        dotnet build VoiceNotesAI.Domain/VoiceNotesAI.Domain.csproj -c Release
-        dotnet build VoiceNotesAI.Infra.Interfaces/VoiceNotesAI.Infra.Interfaces.csproj -c Release
-        dotnet build VoiceNotesAI.Infra/VoiceNotesAI.Infra.csproj -c Release
+        dotnet publish VoiceNotesAI.Domain/VoiceNotesAI.Domain.csproj -c Release -o publish/Domain
+        dotnet publish VoiceNotesAI.Infra.Interfaces/VoiceNotesAI.Infra.Interfaces.csproj -c Release -o publish/Infra-Interfaces
+        dotnet publish VoiceNotesAI.Infra/VoiceNotesAI.Infra.csproj -c Release -o publish/Infra
 
     - name: Generate Markdown documentation
       run: |
         mkdir -p wiki/Domain wiki/Infra-Interfaces wiki/Infra
 
-        xmldoc2md VoiceNotesAI.Domain/bin/Release/net8.0/VoiceNotesAI.Domain.dll \
+        xmldoc2md publish/Domain/VoiceNotesAI.Domain.dll \
           --output wiki/Domain --back-button --index-page-name Domain
 
-        xmldoc2md VoiceNotesAI.Infra.Interfaces/bin/Release/net8.0/VoiceNotesAI.Infra.Interfaces.dll \
+        xmldoc2md publish/Infra-Interfaces/VoiceNotesAI.Infra.Interfaces.dll \
           --output wiki/Infra-Interfaces --back-button --index-page-name Infra-Interfaces
 
-        xmldoc2md VoiceNotesAI.Infra/bin/Release/net8.0/VoiceNotesAI.Infra.dll \
+        xmldoc2md publish/Infra/VoiceNotesAI.Infra.dll \
           --output wiki/Infra --back-button --index-page-name Infra
 
     - name: Generate Home page
