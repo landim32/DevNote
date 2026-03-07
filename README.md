@@ -301,6 +301,36 @@ The project uses 4 chained workflows for automated versioning, releases, and bui
 | **Build Android APK** | `build-apk.yml` | After Create Release | Builds, publishes, and attaches APK to the release |
 | **Generate API Docs** | `generate-docs.yml` | Push to `main` (Domain/Infra paths) | Generates XML docs and deploys to GitHub Wiki |
 
+### APK Signing — Required Secrets
+
+The **Build Android APK** workflow signs the APK using a keystore. You must configure 4 secrets in your GitHub repository (**Settings → Secrets and variables → Actions → New repository secret**):
+
+| Secret | Description | Example |
+|--------|-------------|---------|
+| `ANDROID_KEYSTORE_BASE64` | Keystore file (`.jks`) encoded in base64 | `MIIEvgIBADANBg...` |
+| `ANDROID_KEYSTORE_PASSWORD` | Password used to create the keystore | `your_keystore_password` |
+| `ANDROID_KEY_ALIAS` | Alias of the signing key | `voicenotesai` |
+| `ANDROID_KEY_PASSWORD` | Password for the signing key | `your_key_password` |
+
+#### Generating the keystore
+
+```bash
+# 1. Generate the keystore (requires JDK keytool)
+keytool -genkey -v -keystore voicenotesai.keystore -alias voicenotesai \
+  -keyalg RSA -keysize 2048 -validity 10000
+
+# 2. Convert to base64
+# Linux/macOS:
+base64 voicenotesai.keystore > keystore.b64
+
+# PowerShell (Windows):
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("voicenotesai.keystore")) | Set-Content keystore.b64
+```
+
+Copy the contents of `keystore.b64` into the `ANDROID_KEYSTORE_BASE64` secret.
+
+⚠️ **IMPORTANT**: Keep your keystore and passwords safe. Without them, you cannot publish updates to an existing app. The `keystore/` directory is gitignored — never commit keystore files.
+
 **Pipeline flow:**
 ```
 Push to main → Version and Tag → Create Release → Build Android APK
