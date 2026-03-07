@@ -64,15 +64,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore VoiceNotesAI.sln
 
-    # ============================================================
-    # SIGNING (descomente quando tiver o keystore configurado)
-    #
-    # Secrets necessarios no GitHub:
-    #   ANDROID_KEYSTORE_BASE64  - keystore .jks em base64
-    #   ANDROID_KEYSTORE_PASSWORD
-    #   ANDROID_KEY_ALIAS
-    #   ANDROID_KEY_PASSWORD
-    # ============================================================
     - name: Decode keystore
       run: |
         echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/voicenotesai.keystore
@@ -90,15 +81,6 @@ jobs:
           -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEY_ALIAS }} \
           -p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEY_PASSWORD }} \
           -p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-
-    - name: Publish Android APK
-      run: |
-        dotnet publish VoiceNotesAI/VoiceNotesAI.csproj \
-          -f net8.0-android \
-          -c Release \
-          -p:AndroidPackageFormat=apk \
-          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }} \
-          -p:ApplicationVersion=${{ github.run_number }}
 
     - name: Find APK file
       id: find_apk
