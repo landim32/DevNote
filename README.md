@@ -1,4 +1,4 @@
-# VoiceNotes AI — Notas de Voz Inteligentes
+# DevNotes — Notas de Voz Inteligentes
 
 ![.NET MAUI](https://img.shields.io/badge/.NET_MAUI-8.0-512BD4?logo=dotnet)
 ![Android](https://img.shields.io/badge/Android-21%2B-3DDC84?logo=android)
@@ -8,7 +8,7 @@
 
 ## Overview
 
-**VoiceNotes AI** is a .NET MAUI Android app that records voice notes and automatically structures them using OpenAI's **Whisper** (speech-to-text) and **GPT-4** (note interpretation) APIs. Simply tap the microphone, speak, and the app transcribes your audio, interprets the content, and generates a structured note with title, description, and category — all in Portuguese (Brazil).
+**DevNotes** is a .NET MAUI Android app that records voice notes and automatically structures them using OpenAI's **Whisper** (speech-to-text) and **GPT-4** (note interpretation) APIs. Simply tap the microphone, speak, and the app transcribes your audio, interprets the content, and generates a structured note with title, description, and category — all in Portuguese (Brazil).
 
 Built with **MVVM + layered architecture** across 7 projects using CommunityToolkit.Mvvm, SQLite for local storage, AutoMapper for Model↔DTO mapping, and dependency injection throughout.
 

@@ -9,7 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <ApplicationTitle>VoiceNotes AI</ApplicationTitle>
+    <ApplicationTitle>DevNotes</ApplicationTitle>
     <ApplicationId>br.com.emagine.devnotes</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>

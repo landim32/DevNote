@@ -14,7 +14,7 @@ public class CommentRepositoryTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _dbPath = Path.Combine(Path.GetTempPath(), $"voicenotes_test_{Guid.NewGuid()}.db3");
+        _dbPath = Path.Combine(Path.GetTempPath(), $"devnotes_test_{Guid.NewGuid()}.db3");
         _database = new AppDatabase(_dbPath);
         await _database.InitializeAsync();
 

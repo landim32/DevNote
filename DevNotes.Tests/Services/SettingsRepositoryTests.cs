@@ -11,7 +11,7 @@ public class SettingsRepositoryTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _dbPath = Path.Combine(Path.GetTempPath(), $"voicenotes_settings_test_{Guid.NewGuid()}.db3");
+        _dbPath = Path.Combine(Path.GetTempPath(), $"devnotes_settings_test_{Guid.NewGuid()}.db3");
         _database = new AppDatabase(_dbPath);
         await _database.InitializeAsync();
         _repository = new SettingsRepository(_database);

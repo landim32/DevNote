@@ -3,7 +3,7 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:DevNotes.Pages"
        x:Class="DevNotes.AppShell"
-       Title="VoiceNotes AI"
+       Title="DevNotes"
        FlyoutBehavior="Flyout"
        Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Gray950}}"
        Shell.ForegroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Primary}}"
@@ -15,7 +15,7 @@
               BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Accent}}"
               Padding="20">
             <VerticalStackLayout VerticalOptions="End" Spacing="4">
-                <Label Text="VoiceNotes AI"
+                <Label Text="DevNotes"
                        FontSize="22"
                        FontAttributes="Bold"
                        TextColor="{StaticResource White}" />
