@@ -8,9 +8,9 @@
              Title="Notas"
              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}">
 
-    <Grid Padding="16">
+    <Grid>
 
-        <Grid RowDefinitions="Auto,*">
+        <Grid RowDefinitions="Auto,*" Padding="16">
             <!-- Category Filter -->
             <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Grid.Row="0">
                 <HorizontalStackLayout Spacing="8" Padding="0,0,0,12"
