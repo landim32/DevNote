@@ -134,7 +134,7 @@
                             HeightRequest="50"
                             CornerRadius="25"
                             BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-                            TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}" />
+                            TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" />
                 </Grid>
 
                 <!-- Save Button (creation mode - full width) -->
@@ -148,7 +148,7 @@
                         CornerRadius="25"
                         Margin="0,12,0,0"
                         BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-                        TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}" />
+                        TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" />
 
                 <!-- Saving/Consolidating Indicator -->
                 <ActivityIndicator IsRunning="{Binding IsSaving}"

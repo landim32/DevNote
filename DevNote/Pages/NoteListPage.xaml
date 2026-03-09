@@ -92,8 +92,8 @@
                                     <Label Text="{Binding Category}"
                                            FontSize="13"
                                            Padding="8,2"
-                                           TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-                                           BackgroundColor="{AppThemeBinding Light=#D0E0E0, Dark=#152525}"
+                                           TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark=#FFB74D}"
+                                           BackgroundColor="{AppThemeBinding Light=#D0E0E0, Dark=#3D2E10}"
                                            Grid.Row="0" Grid.Column="1"
                                            VerticalOptions="Center" />
 

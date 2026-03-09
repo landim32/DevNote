@@ -6,8 +6,8 @@
        Title="DevNote"
        FlyoutBehavior="Flyout"
        Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Gray950}}"
-       Shell.ForegroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Primary}}"
-       Shell.TitleColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Primary}}"
+       Shell.ForegroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}"
+       Shell.TitleColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}"
        FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}">
 
     <Shell.FlyoutHeader>

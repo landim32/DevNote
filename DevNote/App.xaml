@@ -24,8 +24,8 @@
                 <Setter Property="HeightRequest" Value="34" />
                 <Setter Property="CornerRadius" Value="17" />
                 <Setter Property="Padding" Value="14,0" />
-                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#D0E0E0, Dark=#152525}" />
-                <Setter Property="TextColor" Value="{AppThemeBinding Light=#304040, Dark=#608080}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#D0E0E0, Dark=#3D2E10}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light=#304040, Dark=#FFB74D}" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

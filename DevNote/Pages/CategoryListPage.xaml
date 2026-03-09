@@ -87,7 +87,7 @@
                 CornerRadius="28"
                 Margin="0,12,0,0"
                 BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-                TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}" />
+                TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" />
     </Grid>
 
 </ContentPage>

@@ -5,11 +5,11 @@
 
     <!-- Brand Colors -->
     <Color x:Key="Primary">#304040</Color>
-    <Color x:Key="PrimaryDark">#304040</Color>
+    <Color x:Key="PrimaryDark">#3A6050</Color>
     <Color x:Key="PrimaryLight">#608080</Color>
     <Color x:Key="Secondary">#E0E0E0</Color>
     <Color x:Key="SecondaryDark">#B0B0B0</Color>
-    <Color x:Key="Accent">#101020</Color>
+    <Color x:Key="Accent">#081410</Color>
     <Color x:Key="AccentOrange">#205050</Color>
     <Color x:Key="AccentTeal">#80C0D0</Color>
     <Color x:Key="Tertiary">#80C0D0</Color>
@@ -25,8 +25,8 @@
     <Color x:Key="Gray400">#9E9E9E</Color>
     <Color x:Key="Gray500">#757575</Color>
     <Color x:Key="Gray600">#424242</Color>
-    <Color x:Key="Gray900">#1A1A2E</Color>
-    <Color x:Key="Gray950">#101020</Color>
+    <Color x:Key="Gray900">#162E25</Color>
+    <Color x:Key="Gray950">#0D1F18</Color>
 
     <!-- Semantic -->
     <Color x:Key="Danger">#E53935</Color>
