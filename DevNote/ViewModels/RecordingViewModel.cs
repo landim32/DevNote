@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using DevNote.DTOs;
 using DevNote.AppServices;
 using DevNote.Helpers;
+using DevNote.Services.Interfaces;
 
 namespace DevNote.ViewModels;
 
@@ -90,18 +91,15 @@ public partial class RecordingViewModel : ObservableObject
         {
             TranscribedText = await _speechToTextService.TranscribeAsync(AudioFilePath);
 
-            StatusMessage = "Salvando nota...";
             var noteInfo = new NoteInfo
             {
                 Description = TranscribedText,
                 AudioFilePath = AudioFilePath
             };
 
-            var saved = await _noteService.SaveAsync(noteInfo);
-
             var parameters = new Dictionary<string, object>
             {
-                { "NoteInfo", saved }
+                { "NoteInfo", noteInfo }
             };
 
             await Shell.Current.GoToAsync("//NoteListPage/NoteDetailPage", parameters);

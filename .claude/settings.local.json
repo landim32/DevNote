@@ -55,7 +55,9 @@
       "Bash(dotnet publish:*)",
       "Bash(find .:*)",
       "Bash(adb devices:*)",
-      "Bash(cmd.exe:*)"
+      "Bash(cmd.exe:*)",
+      "Bash(git remote:*)",
+      "Bash(identify:*)"
     ]
   }
 }

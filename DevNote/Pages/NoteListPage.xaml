@@ -93,7 +93,7 @@
                                            FontSize="13"
                                            Padding="8,2"
                                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-                                           BackgroundColor="{AppThemeBinding Light=#FDE8E0, Dark=#2A1510}"
+                                           BackgroundColor="{AppThemeBinding Light=#D0E0E0, Dark=#152525}"
                                            Grid.Row="0" Grid.Column="1"
                                            VerticalOptions="Center" />
 

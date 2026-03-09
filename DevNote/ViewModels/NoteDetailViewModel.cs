@@ -93,8 +93,8 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
             Category = note.Category;
             AudioFilePath = note.AudioFilePath;
             CreatedAt = note.CreatedAt;
-            IsNewNote = false;
-            PageTitle = "Detalhes da Nota";
+            IsNewNote = note.Id == 0;
+            PageTitle = note.Id == 0 ? "Nova Nota" : "Detalhes da Nota";
         }
     }
 

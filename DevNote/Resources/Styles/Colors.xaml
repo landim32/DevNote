@@ -4,13 +4,13 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <!-- Brand Colors -->
-    <Color x:Key="Primary">#F07040</Color>
-    <Color x:Key="PrimaryDark">#F07040</Color>
-    <Color x:Key="PrimaryLight">#F8A080</Color>
+    <Color x:Key="Primary">#304040</Color>
+    <Color x:Key="PrimaryDark">#304040</Color>
+    <Color x:Key="PrimaryLight">#608080</Color>
     <Color x:Key="Secondary">#E0E0E0</Color>
     <Color x:Key="SecondaryDark">#B0B0B0</Color>
     <Color x:Key="Accent">#101020</Color>
-    <Color x:Key="AccentOrange">#F07000</Color>
+    <Color x:Key="AccentOrange">#205050</Color>
     <Color x:Key="AccentTeal">#80C0D0</Color>
     <Color x:Key="Tertiary">#80C0D0</Color>
     <Color x:Key="TertiaryDark">#80C0D0</Color>

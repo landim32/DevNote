@@ -49,7 +49,7 @@
                        BorderColor="Transparent"
                        HorizontalOptions="Center"
                        VerticalOptions="Center"
-                       BackgroundColor="{AppThemeBinding Light=#FDE8E0, Dark=#2A1510}">
+                       BackgroundColor="{AppThemeBinding Light=#D0E0E0, Dark=#152525}">
                     <Label Text="🎙️"
                            FontSize="64"
                            HorizontalOptions="Center"
