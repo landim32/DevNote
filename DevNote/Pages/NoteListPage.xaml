@@ -20,7 +20,20 @@
                             <Button Text="{Binding ., Converter={StaticResource CategoryFilterTextConverter}}"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NoteListViewModel}}, Path=FilterByCategoryCommand}"
                                     CommandParameter="{Binding}"
-                                    Style="{StaticResource ChipButton}" />
+                                    Style="{StaticResource ChipButton}">
+                                <Button.BackgroundColor>
+                                    <MultiBinding Converter="{StaticResource ChipColorConverter}" ConverterParameter="bg">
+                                        <Binding Path="." />
+                                        <Binding Path="SelectedCategory" Source="{RelativeSource AncestorType={x:Type vm:NoteListViewModel}}" />
+                                    </MultiBinding>
+                                </Button.BackgroundColor>
+                                <Button.TextColor>
+                                    <MultiBinding Converter="{StaticResource ChipColorConverter}" ConverterParameter="text">
+                                        <Binding Path="." />
+                                        <Binding Path="SelectedCategory" Source="{RelativeSource AncestorType={x:Type vm:NoteListViewModel}}" />
+                                    </MultiBinding>
+                                </Button.TextColor>
+                            </Button>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </HorizontalStackLayout>
@@ -66,7 +79,13 @@
                                 <SwipeItems>
                                     <SwipeItem Text="Excluir"
                                                BackgroundColor="#E53935"
+                                               IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:NoteListViewModel}}, Path=IsShowingArchived}"
                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NoteListViewModel}}, Path=DeleteNoteCommand}"
+                                               CommandParameter="{Binding}" />
+                                    <SwipeItem Text="Arquivar"
+                                               BackgroundColor="{StaticResource Gray500}"
+                                               IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:NoteListViewModel}}, Path=IsShowingArchived, Converter={StaticResource InvertedBoolConverter}}"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NoteListViewModel}}, Path=ArchiveNoteCommand}"
                                                CommandParameter="{Binding}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>

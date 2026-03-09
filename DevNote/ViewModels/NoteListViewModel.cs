@@ -33,6 +33,9 @@ public partial class NoteListViewModel : ObservableObject
     [ObservableProperty]
     private bool _isFabMenuOpen;
 
+    [ObservableProperty]
+    private bool _isShowingArchived;
+
     [RelayCommand]
     private void ToggleFabMenu()
     {
@@ -55,9 +58,19 @@ public partial class NoteListViewModel : ObservableObject
         {
             await LoadCategoriesAsync();
 
-            var noteList = string.IsNullOrEmpty(SelectedCategory)
-                ? await _noteService.GetAllAsync()
-                : await _noteService.GetByCategoryAsync(SelectedCategory);
+            List<NoteInfo> noteList;
+            if (SelectedCategory == "__archived__")
+            {
+                noteList = await _noteService.GetArchivedAsync();
+                IsShowingArchived = true;
+            }
+            else
+            {
+                noteList = string.IsNullOrEmpty(SelectedCategory)
+                    ? await _noteService.GetAllAsync()
+                    : await _noteService.GetByCategoryAsync(SelectedCategory);
+                IsShowingArchived = false;
+            }
 
             Notes = new ObservableCollection<NoteInfo>(noteList);
             IsEmpty = Notes.Count == 0;
@@ -72,7 +85,7 @@ public partial class NoteListViewModel : ObservableObject
     {
         var categoryNames = await _noteService.GetAllCategoryNamesAsync();
         FilterCategories = new ObservableCollection<string>(
-            new[] { "" }.Concat(categoryNames)
+            new[] { "", "__archived__" }.Concat(categoryNames)
         );
     }
 
@@ -95,12 +108,20 @@ public partial class NoteListViewModel : ObservableObject
     {
         bool confirm = await Shell.Current.DisplayAlert(
             "Excluir nota",
-            $"Deseja excluir \"{note.Title}\"?",
+            $"Deseja excluir \"{note.Title}\" permanentemente?",
             "Sim", "Não");
 
         if (!confirm) return;
 
         await _noteService.DeleteAsync(note.Id);
+        Notes.Remove(note);
+        IsEmpty = Notes.Count == 0;
+    }
+
+    [RelayCommand]
+    private async Task ArchiveNoteAsync(NoteInfo note)
+    {
+        await _noteService.ArchiveAsync(note.Id);
         Notes.Remove(note);
         IsEmpty = Notes.Count == 0;
     }

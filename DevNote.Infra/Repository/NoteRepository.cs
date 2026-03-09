@@ -20,6 +20,7 @@ public class NoteRepository : INoteRepository
     {
         var notes = await _database.Connection
             .Table<Note>()
+            .Where(n => !n.IsArchived)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
         return _mapper.Map<List<NoteInfo>>(notes);
@@ -40,10 +41,12 @@ public class NoteRepository : INoteRepository
 
         if (note.Id != 0)
         {
-            return await _database.Connection.UpdateAsync(note);
+            await _database.Connection.UpdateAsync(note);
+            return note.Id;
         }
 
-        return await _database.Connection.InsertAsync(note);
+        await _database.Connection.InsertAsync(note);
+        return note.Id;
     }
 
     public async Task<int> DeleteAsync(int id)
@@ -55,9 +58,41 @@ public class NoteRepository : INoteRepository
     {
         var notes = await _database.Connection
             .Table<Note>()
-            .Where(n => n.Category == category)
+            .Where(n => n.Category == category && !n.IsArchived)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
         return _mapper.Map<List<NoteInfo>>(notes);
+    }
+
+    public async Task<List<NoteInfo>> GetArchivedAsync()
+    {
+        var notes = await _database.Connection
+            .Table<Note>()
+            .Where(n => n.IsArchived)
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync();
+        return _mapper.Map<List<NoteInfo>>(notes);
+    }
+
+    public async Task ArchiveAsync(int id)
+    {
+        var note = await _database.Connection.Table<Note>().Where(n => n.Id == id).FirstOrDefaultAsync();
+        if (note != null)
+        {
+            note.IsArchived = true;
+            note.UpdatedAt = DateTime.UtcNow;
+            await _database.Connection.UpdateAsync(note);
+        }
+    }
+
+    public async Task RestoreAsync(int id)
+    {
+        var note = await _database.Connection.Table<Note>().Where(n => n.Id == id).FirstOrDefaultAsync();
+        if (note != null)
+        {
+            note.IsArchived = false;
+            note.UpdatedAt = DateTime.UtcNow;
+            await _database.Connection.UpdateAsync(note);
+        }
     }
 }

@@ -57,7 +57,13 @@
       "Bash(adb devices:*)",
       "Bash(cmd.exe:*)",
       "Bash(git remote:*)",
-      "Bash(identify:*)"
+      "Bash(identify:*)",
+      "Bash(adb logcat:*)",
+      "Read(//c/repos/DevNote/$ANDROID_HOME/platform-tools/**)",
+      "Read(//c/repos/DevNote/$LOCALAPPDATA/Android/Sdk/platform-tools/**)",
+      "Bash(where adb.exe)",
+      "Read(//c/Users/rodri/**)",
+      "Bash(\"/c/Program Files \\(x86\\)/Android/android-sdk/platform-tools/adb.exe\" logcat:*)"
     ]
   }
 }

@@ -52,7 +52,10 @@ public class NoteService : INoteService
 
         note.Validate();
         var dto = _mapper.Map<NoteInfo>(note);
-        await _noteRepository.SaveAsync(dto);
+        var id = await _noteRepository.SaveAsync(dto);
+
+        if (dto.Id == 0)
+            dto.Id = id;
 
         return dto;
     }
@@ -60,6 +63,21 @@ public class NoteService : INoteService
     public async Task DeleteAsync(int id)
     {
         await _noteRepository.DeleteAsync(id);
+    }
+
+    public async Task ArchiveAsync(int id)
+    {
+        await _noteRepository.ArchiveAsync(id);
+    }
+
+    public async Task RestoreAsync(int id)
+    {
+        await _noteRepository.RestoreAsync(id);
+    }
+
+    public async Task<List<NoteInfo>> GetArchivedAsync()
+    {
+        return await _noteRepository.GetArchivedAsync();
     }
 
     public async Task<List<string>> GetAllCategoryNamesAsync()

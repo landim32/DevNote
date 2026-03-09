@@ -10,4 +10,7 @@ public interface INoteService
     Task<NoteInfo> SaveAsync(NoteInfo note);
     Task DeleteAsync(int id);
     Task<List<string>> GetAllCategoryNamesAsync();
+    Task ArchiveAsync(int id);
+    Task RestoreAsync(int id);
+    Task<List<NoteInfo>> GetArchivedAsync();
 }

@@ -83,6 +83,12 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     [ObservableProperty]
     private string _recordingStatus = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEditable))]
+    private bool _isArchived;
+
+    public bool IsEditable => !IsArchived;
+
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (query.TryGetValue("NoteInfo", out var noteObj) && noteObj is NoteInfo note)
@@ -93,6 +99,7 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
             Category = note.Category;
             AudioFilePath = note.AudioFilePath;
             CreatedAt = note.CreatedAt;
+            IsArchived = note.IsArchived;
             IsNewNote = note.Id == 0;
             PageTitle = note.Id == 0 ? "Nova Nota" : "Detalhes da Nota";
         }
@@ -101,10 +108,16 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     [RelayCommand]
     private async Task LoadCategoriesAsync()
     {
+        var savedCategory = Category;
+
         var categoryNames = await _noteService.GetAllCategoryNamesAsync();
         AvailableCategories = new ObservableCollection<string>(categoryNames);
 
-        if (IsNewNote && string.IsNullOrEmpty(Category))
+        if (!string.IsNullOrEmpty(savedCategory) && AvailableCategories.Contains(savedCategory))
+        {
+            Category = savedCategory;
+        }
+        else if (IsNewNote)
         {
             var lastCategory = await _settingService.GetAsync("LastSelectedCategory");
             if (!string.IsNullOrEmpty(lastCategory) && AvailableCategories.Contains(lastCategory))
@@ -359,6 +372,54 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     }
 
     [RelayCommand]
+    private async Task DuplicateAsync()
+    {
+        IsFabMenuOpen = false;
+
+        try
+        {
+            await EnsureNoteSavedAsync();
+
+            var allNotes = await _noteService.GetAllAsync();
+            var baseTitle = string.IsNullOrEmpty(Title) ? "Nota" : System.Text.RegularExpressions.Regex.Replace(Title, @"\s*\(\d+\)$", "");
+            var existingTitles = allNotes.Select(n => n.Title).ToHashSet();
+            var counter = 2;
+            string newTitle;
+            do
+            {
+                newTitle = $"{baseTitle} ({counter})";
+                counter++;
+            } while (existingTitles.Contains(newTitle));
+
+            var duplicatedNote = new NoteInfo
+            {
+                Title = newTitle,
+                Description = Description,
+                Category = Category,
+                AudioFilePath = AudioFilePath
+            };
+
+            var saved = await _noteService.SaveAsync(duplicatedNote);
+
+            foreach (var comment in Comments)
+            {
+                var duplicatedComment = new CommentInfo
+                {
+                    NoteId = saved.Id,
+                    Content = comment.Content
+                };
+                await _commentService.SaveAsync(duplicatedComment);
+            }
+
+            await Shell.Current.GoToAsync("//NoteListPage");
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert("Erro", $"Erro ao duplicar: {ex.Message}", "OK");
+        }
+    }
+
+    [RelayCommand]
     private async Task DeleteCommentAsync(CommentInfo comment)
     {
         await _commentService.DeleteAsync(comment.Id);
@@ -370,13 +431,29 @@ public partial class NoteDetailViewModel : ObservableObject, IQueryAttributable
     {
         bool confirm = await Shell.Current.DisplayAlert(
             "Excluir nota",
-            $"Deseja excluir \"{Title}\"?",
+            $"Deseja excluir \"{Title}\" permanentemente?",
             "Sim", "Não");
 
         if (!confirm) return;
 
         await _commentService.DeleteByNoteIdAsync(NoteId);
         await _noteService.DeleteAsync(NoteId);
+        await Shell.Current.GoToAsync("..");
+    }
+
+    [RelayCommand]
+    private async Task ArchiveAsync()
+    {
+        await EnsureNoteSavedAsync();
+        await _noteService.ArchiveAsync(NoteId);
+        await Shell.Current.GoToAsync("..");
+    }
+
+    [RelayCommand]
+    private async Task RestoreAsync()
+    {
+        IsFabMenuOpen = false;
+        await _noteService.RestoreAsync(NoteId);
         await Shell.Current.GoToAsync("..");
     }
 

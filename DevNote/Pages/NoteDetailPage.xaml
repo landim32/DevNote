@@ -30,6 +30,7 @@
                             FontSize="16"
                             HeightRequest="200"
                             AutoSize="TextChanges"
+                            IsReadOnly="{Binding IsArchived}"
                             BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
                             TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                             PlaceholderColor="{StaticResource Gray400}" />
@@ -44,6 +45,7 @@
                     <Picker Title="Selecione a categoria"
                             ItemsSource="{Binding AvailableCategories}"
                             SelectedItem="{Binding Category}"
+                            IsEnabled="{Binding IsEditable}"
                             TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                             BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}" />
                 </VerticalStackLayout>
@@ -57,6 +59,7 @@
                     <Entry Text="{Binding Title}"
                            Placeholder="Preenchido automaticamente se vazio"
                            FontSize="18"
+                           IsReadOnly="{Binding IsArchived}"
                            BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
                            TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                            PlaceholderColor="{StaticResource Gray400}" />
@@ -113,12 +116,37 @@
                     </CollectionView>
                 </VerticalStackLayout>
 
-                <!-- Action Buttons (edit mode) -->
+                <!-- Action Buttons (edit mode - not archived) -->
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,12,0,0"
                       IsVisible="{Binding IsNewNote, Converter={StaticResource InvertedBoolConverter}}">
+                    <!-- Not archived: Arquivar + Salvar -->
+                    <Button Grid.Column="0"
+                            Text="Arquivar"
+                            Command="{Binding ArchiveCommand}"
+                            IsVisible="{Binding IsEditable}"
+                            FontSize="17"
+                            HeightRequest="50"
+                            CornerRadius="25"
+                            BackgroundColor="{StaticResource Gray500}"
+                            TextColor="{StaticResource White}" />
+
+                    <Button Grid.Column="1"
+                            Text="Salvar"
+                            Command="{Binding SaveCommand}"
+                            IsVisible="{Binding IsEditable}"
+                            IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+                            FontSize="17"
+                            FontAttributes="Bold"
+                            HeightRequest="50"
+                            CornerRadius="25"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" />
+
+                    <!-- Archived: Excluir + Restaurar -->
                     <Button Grid.Column="0"
                             Text="Excluir"
                             Command="{Binding DeleteCommand}"
+                            IsVisible="{Binding IsArchived}"
                             FontSize="17"
                             HeightRequest="50"
                             CornerRadius="25"
@@ -126,9 +154,9 @@
                             TextColor="{StaticResource White}" />
 
                     <Button Grid.Column="1"
-                            Text="Salvar"
-                            Command="{Binding SaveCommand}"
-                            IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+                            Text="Restaurar"
+                            Command="{Binding RestoreCommand}"
+                            IsVisible="{Binding IsArchived}"
                             FontSize="17"
                             FontAttributes="Bold"
                             HeightRequest="50"
@@ -157,7 +185,7 @@
 
                 <!-- Bottom padding for FAB -->
                 <BoxView HeightRequest="80"
-                         IsVisible="{Binding IsNewNote, Converter={StaticResource InvertedBoolConverter}}"
+                         IsVisible="{Binding IsEditable}"
                          Color="Transparent" />
             </VerticalStackLayout>
         </ScrollView>
@@ -269,6 +297,38 @@
                              VerticalOptions="End"
                              Margin="0,0,8,96"
                              Spacing="12">
+
+            <!-- Duplicate Note Option -->
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="End">
+                <Label Text="Duplicar Nota"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource White}"
+                       VerticalOptions="Center"
+                       Padding="10,6"
+                       BackgroundColor="#CC333333">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding DuplicateCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Border StrokeThickness="0"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        Shadow="{Shadow Brush=Black, Offset='1,2', Radius=4, Opacity=0.3}"
+                        StrokeShape="RoundRectangle 24">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding DuplicateCommand}" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                          Fill="White"
+                          Aspect="Uniform"
+                          WidthRequest="22"
+                          HeightRequest="22"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center" />
+                </Border>
+            </HorizontalStackLayout>
 
             <!-- Improve with AI Option -->
             <HorizontalStackLayout Spacing="10" HorizontalOptions="End">
@@ -399,14 +459,14 @@
             </HorizontalStackLayout>
         </VerticalStackLayout>
 
-        <!-- FAB Main Button (visible only in edit mode) -->
+        <!-- FAB Main Button (visible only in edit mode, not archived) -->
         <Border StrokeThickness="0"
                 WidthRequest="64"
                 HeightRequest="64"
                 HorizontalOptions="End"
                 VerticalOptions="End"
                 Margin="0,0,4,16"
-                IsVisible="{Binding IsNewNote, Converter={StaticResource InvertedBoolConverter}}"
+                IsVisible="{Binding IsEditable}"
                 BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
                 Shadow="{Shadow Brush=Black, Offset='2,4', Radius=8, Opacity=0.3}"
                 StrokeShape="RoundRectangle 32">

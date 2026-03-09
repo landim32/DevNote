@@ -19,6 +19,8 @@ public class Note
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    public bool IsArchived { get; set; }
+
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Description))

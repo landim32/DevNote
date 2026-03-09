@@ -9,4 +9,7 @@ public interface INoteRepository
     Task<int> SaveAsync(NoteInfo note);
     Task<int> DeleteAsync(int id);
     Task<List<NoteInfo>> GetByCategoryAsync(string category);
+    Task<List<NoteInfo>> GetArchivedAsync();
+    Task ArchiveAsync(int id);
+    Task RestoreAsync(int id);
 }

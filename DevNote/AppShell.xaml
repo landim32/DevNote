@@ -3,7 +3,7 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:DevNote.Pages"
        x:Class="DevNote.AppShell"
-       Title="DevNote"
+       Title="Dev Note"
        FlyoutBehavior="Flyout"
        Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Gray950}}"
        Shell.ForegroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}"
@@ -15,7 +15,7 @@
               BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Accent}}"
               Padding="20">
             <VerticalStackLayout VerticalOptions="End" Spacing="4">
-                <Label Text="DevNote"
+                <Label Text="Dev Note"
                        FontSize="24"
                        FontAttributes="Bold"
                        TextColor="{StaticResource White}" />
